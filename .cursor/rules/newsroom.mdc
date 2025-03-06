@@ -1,0 +1,76 @@
+---
+description: The newsroom agents
+globs: 
+alwaysApply: false
+---
+# Agent News
+
+A monorepo containing a set of AI agents designed to gather, process, and publish trending news content. The system uses various AI models to create a sophisticated news processing pipeline.
+
+## Agents Overview
+
+**Editor in Chief**: Oversees the entire content pipeline
+- Complete workflow orchestration
+- Automated news pipeline management
+- Podcast generation coordination
+- Multiple operation modes:
+  - Full workflow (news + podcast)
+  - Podcast-only workflow
+  - etc.
+- Automated publishing system
+
+
+**Editor**: Handles content editing and refinement
+1. Content Enhancement
+   - Retrieves additional content using Firecrawl
+   - Extracts metadata and images
+   - Applies source-specific templates
+   - Generates enhanced content using GPT-4
+
+2. Content Structuring
+   - Creates engaging headlines
+   - Writes compelling summaries
+   - Structures body content with relevant sections
+   - Adds contextual information
+
+3. Content Enrichment
+   - Generates relevant tags
+   - Extracts and processes images
+   - Adds source-appropriate formatting
+   - Maintains source attribution
+
+**Filter**: Filters our duplicative and non-related content
+- AI-powered relevance checking
+- Duplicate content detection
+- Confidence scoring for article relevance
+- Focus on specific AI topics:
+  - Large Language Models (LLMs)
+  - AI Agents and Autonomous Systems
+  - Significant AI Industry News
+  - AI Research Breakthroughs
+  - AI Ethics and Policy
+
+**Investigator**: Researches and verifies news content
+- Automated web scraping using the Firecrawl API
+- Focus on AI and agent-related news content
+- Real-time trend detection and analysis
+- Integration with the project's data pipeline
+
+**Podcast Editor**: Prepares content for podcast format
+- AI-powered podcast script generation
+- Dynamic host personality creation
+- Smart story grouping and transitions
+- Time-optimized content (4-minute format)
+- Automated transcript generation
+- Redis-based transcript storage
+- Date range-based content selection
+
+**Podcast Voice**: Generates audio content
+- High-quality AI voice generation
+- Automatic transcript formatting
+- Cloud storage integration (Cloudflare R2)
+- Local development mode support
+- MP3 audio output (44.1kHz, 128kbps)
+- Automatic URL management
+- Date-based file organization
+
