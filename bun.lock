@@ -4,10 +4,11 @@
     "": {
       "name": "newsroom",
       "dependencies": {
-        "@agentuity/sdk": "^0.0.73",
+        "@agentuity/sdk": "^0.0.74",
         "@ai-sdk/openai": "^1.2.1",
         "@mendable/firecrawl-js": "^1.19.0",
         "ai": "^4.1.54",
+        "bun-types": "^1.2.4",
         "zod": "^3.24.2",
       },
       "devDependencies": {
@@ -19,7 +20,7 @@
     },
   },
   "packages": {
-    "@agentuity/sdk": ["@agentuity/sdk@0.0.73", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.57.2", "@opentelemetry/auto-instrumentations-node": "^0.56.1", "@opentelemetry/exporter-logs-otlp-http": "^0.57.2", "@opentelemetry/exporter-metrics-otlp-http": "^0.57.2", "@opentelemetry/exporter-trace-otlp-http": "^0.57.2", "@opentelemetry/host-metrics": "^0.35.5", "@opentelemetry/resources": "^1.30.1", "@opentelemetry/sdk-logs": "^0.57.2", "@opentelemetry/sdk-metrics": "^1.30.1", "@opentelemetry/sdk-node": "^0.57.2", "@opentelemetry/semantic-conventions": "^1.30.0", "@standard-schema/spec": "^1.0.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-VrC3+KO9Br9my6Hi4YzAR9wnhAC1YlgZTjx1TQtpy1sH7x9xUxn8gnI++fUdxeUz6AsUNTg+uWjyTs8vtjd2aA=="],
+    "@agentuity/sdk": ["@agentuity/sdk@0.0.74", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.57.2", "@opentelemetry/auto-instrumentations-node": "^0.56.1", "@opentelemetry/exporter-logs-otlp-http": "^0.57.2", "@opentelemetry/exporter-metrics-otlp-http": "^0.57.2", "@opentelemetry/exporter-trace-otlp-http": "^0.57.2", "@opentelemetry/host-metrics": "^0.35.5", "@opentelemetry/resources": "^1.30.1", "@opentelemetry/sdk-logs": "^0.57.2", "@opentelemetry/sdk-metrics": "^1.30.1", "@opentelemetry/sdk-node": "^0.57.2", "@opentelemetry/semantic-conventions": "^1.30.0", "@standard-schema/spec": "^1.0.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-N6vhEQJKSpWt3pC7b76+Tf/SoPRxRP4VJQ4g7YjDf/pYAftK+bYlWDvgkUl83oY5RPVVjC4o9aEdlT1f15LL0Q=="],
 
     "@ai-sdk/openai": ["@ai-sdk/openai@1.2.1", "", { "dependencies": { "@ai-sdk/provider": "1.0.10", "@ai-sdk/provider-utils": "2.1.11" }, "peerDependencies": { "zod": "^3.0.0" } }, "sha512-UtVDNrmrKzb3b4T9bnpduXs4FKpWGn+sH5qaFP1mtxOPeYGUF9OoJfGilH3CNfqGAE4QdZh/LT3IV6GHacooGg=="],
 

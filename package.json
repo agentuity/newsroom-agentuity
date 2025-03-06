@@ -1,34 +1,28 @@
 {
-  "name": "newsroom",
-  "description": "A newsroom of agents that go get AI agent news",
-  "version": "0.0.1",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "build": "agentuity build",
-    "prestart": "agentuity bundle",
-    "start": "bun run .agentuity/index.js"
-  },
-  "keywords": [
-    "agentuity",
-    "agent",
-    "ai",
-    "ai agent",
-    "vercel",
-    "bun"
-  ],
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "@agentuity/sdk": "^0.0.73",
-    "@ai-sdk/openai": "^1.2.1",
-    "@mendable/firecrawl-js": "^1.19.0",
-    "ai": "^4.1.54",
-    "zod": "^3.24.2"
-  },
-  "module": "index.ts"
+	"name": "newsroom",
+	"description": "A newsroom of agents that go get AI agent news",
+	"version": "0.0.1",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"build": "agentuity build",
+		"prestart": "agentuity bundle",
+		"start": "bun run .agentuity/index.js"
+	},
+	"keywords": ["agentuity", "agent", "ai", "ai agent", "vercel", "bun"],
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@agentuity/sdk": "^0.0.74",
+		"@ai-sdk/openai": "^1.2.1",
+		"@mendable/firecrawl-js": "^1.19.0",
+		"ai": "^4.1.54",
+		"bun-types": "^1.2.4",
+		"zod": "^3.24.2"
+	},
+	"module": "index.ts"
 }
