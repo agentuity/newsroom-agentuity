@@ -1,5 +1,4 @@
 import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
-import FilterAgentHandler from "../Filter";
 import { stories } from "../../../lib/data/stories";
 import { postPodcastToSlack } from "../../../lib/notifications";
 import type { PodcastTranscript } from "../../../lib/data/podcast";
@@ -23,7 +22,7 @@ export default async function EditorInChiefAgentHandler(
 		// id: "agent_KqdnT67c9b6a8gm4tNUGHR86liUC2dd5",
 		name: "Investigator",
 	});
-	const researchedStories = await investigatorAgent.run();
+	const researchedStories = await investigatorAgent.run({});
 	ctx.logger.info("Investigator: Stories", researchedStories);
 
 	const filterAgent = await ctx.getAgent({

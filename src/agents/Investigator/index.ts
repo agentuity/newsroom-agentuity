@@ -119,7 +119,6 @@ export default async function InvestigatorAgentHandler(
 	ctx: AgentContext,
 ) {
 	ctx.logger.info("Investigator: Start looking for stories");
-	// TODO: req.contentType()
 	const json = req.json() as { dynamicSources?: string[] };
 	const dynamicSources = json?.dynamicSources;
 	const sources = [...DEFAULT_SOURCES, ...(dynamicSources ?? [])];
