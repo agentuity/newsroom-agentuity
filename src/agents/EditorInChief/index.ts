@@ -24,17 +24,17 @@ export default async function EditorInChiefAgentHandler(
 	});
 	const researchedStoriesRun = await investigatorAgent.run({});
 	// This is temp. hack until we handle the base64 payloads properly
-	const researchedStories = JSON.parse(
-		Buffer.from(researchedStoriesRun.payload as string, "utf-8").toString(
-			"base64",
+	const decodedPayload = JSON.parse(
+		Buffer.from(researchedStoriesRun.payload as string, "base64").toString(
+			"utf-8",
 		),
-	) as { articles: Article[] };
-	ctx.logger.info("Investigator: Stories@@@@@@@@", researchedStories);
+	);
+	ctx.logger.info("Researched stories:", decodedPayload);
 
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
 	});
-	const filteredStories = await filterAgent.run(researchedStories);
+	const filteredStories = await filterAgent.run(decodedPayload);
 	ctx.logger.info("Filter: Filtered stories", filteredStories);
 
 	const editorAgent = await ctx.getAgent({
