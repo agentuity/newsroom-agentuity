@@ -108,20 +108,14 @@ export default async function PodcastEditorAgentHandler(
 	);
 
 	// Get stories for the date range
-	const publishedStories = await stories.getByDateRange(
-		ctx.kv,
-		startDate,
-		endDate,
-		{
-			publishedOnly: true,
-		},
-	);
+	const endDateFormatted = formatDate(endDate);
+	const publishedStories = await stories.getPublished(ctx.kv, endDateFormatted);
 
 	if (publishedStories.length === 0) {
-		ctx.logger.info("PodcastEditor: No stories found for date range");
+		ctx.logger.info("PodcastEditor: No stories found for date");
 		return resp.json({
 			success: false,
-			message: "No stories found for date range",
+			message: "No stories found for date",
 		});
 	}
 
@@ -157,4 +151,8 @@ export default async function PodcastEditorAgentHandler(
 	return resp.json({
 		transcript: savedTranscript,
 	});
+}
+
+function formatDate(date: Date): string {
+	return date.toISOString().split("T")[0];
 }

@@ -168,7 +168,7 @@ export default async function EditorAgentHandler(
 	const json = req.json() as { stories?: Story[] };
 	let uneditedStories = json?.stories;
 	if (!uneditedStories) {
-		uneditedStories = await stories.getUneditedUnpublished(ctx.kv);
+		uneditedStories = await stories.getUnedited(ctx.kv);
 	}
 
 	if (!uneditedStories || uneditedStories.length === 0) {
@@ -205,22 +205,36 @@ export default async function EditorAgentHandler(
 					body: enhanced.body,
 					tags: enhanced.tags,
 					edited: true,
-					// Use new images if available, otherwise keep existing
-					images: enhanced.images || story.images,
 				};
 
 				// Update the existing story in storage
-				await stories.update(ctx.kv, updatedStory);
-				editedStories.push(updatedStory);
+				try {
+					await stories.update(ctx.kv, story.link, {
+						headline: enhanced.headline,
+						summary: enhanced.summary,
+						body: enhanced.body,
+						tags: enhanced.tags,
+						edited: true,
+					});
 
-				ctx.logger.info(`Enhanced story: ${enhanced.headline}`);
-				ctx.logger.info(`Reason for changes: ${enhanced.reason}`);
-				ctx.logger.info(`Added tags: ${enhanced.tags.join(", ")}`);
+					editedStories.push(updatedStory);
+
+					ctx.logger.info(`Enhanced story: ${enhanced.headline}`);
+					ctx.logger.info(`Reason for changes: ${enhanced.reason}`);
+					ctx.logger.info(`Added tags: ${enhanced.tags.join(", ")}`);
+				} catch (error) {
+					// Log the error but don't rethrow - we'll continue with the next story
+					ctx.logger.error(
+						`Error updating story: ${error instanceof Error ? error.message : String(error)}`,
+					);
+				}
 
 				// Add delay between stories within a batch
 				await delay(DELAY_BETWEEN_STORIES);
 			} catch (error) {
 				ctx.logger.error(`Error processing story ${story.headline}:`, error);
+				// Skip to the next story after delay
+				await delay(DELAY_BETWEEN_STORIES);
 				// Skip to the next story
 			}
 		}

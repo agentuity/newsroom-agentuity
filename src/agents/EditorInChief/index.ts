@@ -24,26 +24,36 @@ export default async function EditorInChiefAgentHandler(
 	});
 	const researchedStoriesRun = await investigatorAgent.run({});
 	// This is temp. hack until we handle the base64 payloads properly
-	const decodedPayload = JSON.parse(
+	const decodedResearchedStoriesPayload = JSON.parse(
 		Buffer.from(researchedStoriesRun.payload as string, "base64").toString(
 			"utf-8",
 		),
 	);
-	ctx.logger.info("Researched stories:", decodedPayload);
+	ctx.logger.info("Researched stories:", decodedResearchedStoriesPayload);
 
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
 	});
-	const filteredStories = await filterAgent.run(decodedPayload);
-	ctx.logger.info("Filter: Filtered stories", filteredStories);
+	const filteredStories = await filterAgent.run(
+		decodedResearchedStoriesPayload,
+	);
+	// This is temp. hack until we handle the base64 payloads properly
+	const decodedFilteredStoriesPayload = JSON.parse(
+		Buffer.from(filteredStories.payload as string, "base64").toString("utf-8"),
+	);
+	ctx.logger.info("Filter: Filtered stories", decodedFilteredStoriesPayload);
 
 	const editorAgent = await ctx.getAgent({
 		name: "Editor",
 	});
-	const editedStories = await editorAgent.run(filteredStories.payload);
-	ctx.logger.info("Editor: Edited stories", editedStories);
+	const editedStories = await editorAgent.run(decodedFilteredStoriesPayload);
+	// This is temp. hack until we handle the base64 payloads properly
+	const decodedEditedStoriesPayload = JSON.parse(
+		Buffer.from(editedStories.payload as string, "base64").toString("utf-8"),
+	);
+	ctx.logger.info("Editor: Edited stories", decodedEditedStoriesPayload);
 
-	// Publish stories - Just auto publish for now until the approve step is implemented above.
+	// Publish stories
 	const unpublishedStories = await stories.getEditedUnpublished(ctx.kv);
 	console.log(`EditorInChief: Publishing ${unpublishedStories.length} stories`);
 	for (const story of unpublishedStories) {
@@ -61,21 +71,38 @@ export default async function EditorInChiefAgentHandler(
 			end: new Date().toISOString(),
 		},
 	});
+	// This is temp. hack until we handle the base64 payloads properly
+	const decodedPodcastTranscriptPayload = JSON.parse(
+		Buffer.from(podcastTranscript.payload as string, "base64").toString(
+			"utf-8",
+		),
+	);
+	ctx.logger.info(
+		"PodcastEditor: Podcast transcript",
+		decodedPodcastTranscriptPayload,
+	);
 
 	if (podcastTranscript) {
 		console.log("PodcastVoice: Creating podcast voiceover");
 		const podcastVoiceAgent = await ctx.getAgent({
 			name: "PodcastVoice",
 		});
-		const podcastVoice = await podcastVoiceAgent.run(podcastTranscript.payload);
+		const podcastVoice = await podcastVoiceAgent.run(
+			decodedPodcastTranscriptPayload,
+		);
+		// This is temp. hack until we handle the base64 payloads properly
+		const decodedPodcastVoicePayload = JSON.parse(
+			Buffer.from(podcastVoice.payload as string, "base64").toString("utf-8"),
+		);
+		console.log("PodcastVoice: Podcast voice", decodedPodcastVoicePayload);
 
 		// Publish podcast to a slack channel
 		if (process.env.SLACK_WEBHOOK_URL) {
 			console.log("Publishing podcast to Slack");
 			await postPodcastToSlack(
 				process.env.SLACK_WEBHOOK_URL,
-				podcastTranscript.payload as PodcastTranscript,
-				podcastVoice.payload as string,
+				decodedPodcastTranscriptPayload as PodcastTranscript,
+				decodedPodcastVoicePayload as string,
 			);
 		}
 	}

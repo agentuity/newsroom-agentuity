@@ -142,9 +142,8 @@ export default async function FilterAgentHandler(
 		ctx.logger.info(`Filter: Processing ${articles.length} articles`);
 
 		// Get published stories from the last 3 days for similarity check
-		const publishedStories = await stories.getLastNDays(ctx.kv, 3, {
-			publishedOnly: true,
-		});
+		const today = new Date().toISOString().split("T")[0];
+		const publishedStories = await stories.getPublished(ctx.kv, today);
 
 		const filteredStories: Story[] = [];
 
@@ -187,15 +186,22 @@ export default async function FilterAgentHandler(
 			}
 
 			// Convert relevant and unique article to a story
-			const newStory: Story = {
+			const storyData: Omit<Story, "id"> = {
 				...article,
 				published: false,
+				edited: false,
 				date_added: articleWithDate.date_added,
 			};
 
 			// Add the story to storage
-			await stories.add(ctx.kv, newStory);
-			filteredStories.push(newStory);
+			await stories.add(ctx.kv, storyData);
+
+			// Now fetch the complete story (with ID) to add to filtered stories
+			const completeStory = await stories.get(ctx.kv, storyData.link);
+			if (completeStory) {
+				filteredStories.push(completeStory);
+			}
+
 			ctx.logger.info(`Added new story: ${article.headline}`);
 			ctx.logger.info(`Relevance confidence: ${relevance.confidence}`);
 			ctx.logger.info(`Reason: ${relevance.reason}`);

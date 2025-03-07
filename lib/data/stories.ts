@@ -1,238 +1,216 @@
 /**
- * KV helper, ported from old redis setup to the new KV storage
+ * Ultra-simple stories data management - inspired by research.ts
  */
 
-import type { KeyValueStorage } from "@agentuity/sdk";
+import type { KeyValueStorage, Json } from "@agentuity/sdk";
 import { z } from "zod";
 
-const PREFIX = "stories";
+const PREFIX = "stories-simple"; // Use a new prefix to avoid conflicts
 
 // Story schema and type
 export const StorySchema = z.object({
+	id: z.string(),
 	headline: z.string(),
 	summary: z.string(),
 	link: z.string(),
-	published: z.boolean(),
-	date_added: z.string(),
-	date_published: z.string().optional(),
-	images: z.array(z.string()).optional(),
-	body: z.string().optional(),
 	source: z.string(),
+	date_added: z.string(),
+	edited: z.boolean().default(false),
+	published: z.boolean().default(false),
+	date_published: z.string().optional(),
+	body: z.string().optional(),
 	tags: z.array(z.string()).optional(),
-	edited: z.boolean().optional(),
 });
 
 export type Story = z.infer<typeof StorySchema>;
 
-// Type for serializable JSON
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+// Daily stories collection
+interface StoriesCollection {
+	stories: Story[];
+	updated: string;
+}
 
-// Key structure utilities
+// Link lookup table - simple object mapping links to story IDs
+interface LinkLookup {
+	[link: string]: string; // maps link to story ID
+}
+
+// Helper functions
 const generateId = (): string => {
 	return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 };
 
-const getStoryKey = (id: string): string => {
-	return `story:${id}`;
+const getTodayKey = (): string => {
+	const date = new Date().toISOString().split("T")[0];
+	return `day:${date}`;
 };
 
 const getDateKey = (date: string): string => {
-	return `date:${date}`;
+	return `day:${date}`;
 };
 
-const getPublishedKey = (): string => {
-	return "published";
-};
+// Core functions
 
-const getUnpublishedKey = (): string => {
-	return "unpublished";
-};
+/**
+ * Get the stories collection for a specific date
+ */
+async function getStoriesForDate(
+	kv: KeyValueStorage,
+	date: string,
+): Promise<StoriesCollection> {
+	const key = getDateKey(date);
+	const data = await kv.get(PREFIX, key);
 
-const getLinkToIdKey = (link: string): string => {
-	return `link_to_id:${encodeURIComponent(link)}`;
-};
-
-// Date utility functions
-const formatDate = (date: Date): string => {
-	return date.toISOString().split("T")[0];
-};
-
-const getDatesInRange = (startDate: Date, endDate: Date): string[] => {
-	const dates: string[] = [];
-	const currentDate = new Date(startDate);
-
-	while (currentDate <= endDate) {
-		dates.push(formatDate(currentDate));
-		currentDate.setDate(currentDate.getDate() + 1);
+	if (data) {
+		// Make sure we always have a stories array, even if data exists but stories is missing
+		const collection = data as unknown as StoriesCollection;
+		if (!collection.stories) {
+			collection.stories = [];
+		}
+		return collection;
 	}
 
-	return dates;
-};
+	// If no data, return an empty collection
+	return {
+		stories: [],
+		updated: new Date().toISOString(),
+	};
+}
 
+/**
+ * Save the stories collection for a specific date
+ */
+async function saveStoriesForDate(
+	kv: KeyValueStorage,
+	date: string,
+	collection: StoriesCollection,
+): Promise<void> {
+	try {
+		console.log(
+			`Saving stories collection for date ${date} with ${collection.stories?.length || 0} stories`,
+		);
+
+		// Ensure the collection object is valid
+		if (!collection) {
+			throw new Error(
+				"Invalid collection object: collection is null or undefined",
+			);
+		}
+
+		// Ensure stories array exists
+		if (!collection.stories) {
+			collection.stories = [];
+		}
+
+		const key = getDateKey(date);
+		collection.updated = new Date().toISOString();
+
+		console.log(PREFIX, key, collection);
+		await kv.set(
+			PREFIX,
+			key,
+			collection as unknown as Json,
+			365 * 24 * 60 * 60,
+		); // 1 year TTL in seconds
+		console.log(`Successfully saved stories for date ${date}`);
+	} catch (err) {
+		console.error(`Error saving stories for date ${date}:`, err);
+		throw err;
+	}
+}
+
+/**
+ * Get the link lookup table
+ */
+async function getLinkLookup(kv: KeyValueStorage): Promise<LinkLookup> {
+	try {
+		const data = await kv.get(PREFIX, "links");
+
+		if (data) {
+			const lookup = data as unknown as LinkLookup;
+			// Ensure it's a valid object
+			if (lookup && typeof lookup === "object") {
+				return lookup;
+			}
+		}
+
+		// If no data or invalid data, return empty object
+		return {};
+	} catch (err) {
+		console.error("Error retrieving link lookup:", err);
+		return {};
+	}
+}
+
+/**
+ * Save the link lookup table
+ */
+async function saveLinkLookup(
+	kv: KeyValueStorage,
+	lookup: LinkLookup,
+): Promise<void> {
+	try {
+		// Create a new object instead of reassigning parameter
+		const safeObject = lookup || {};
+		await kv.set(PREFIX, "links", safeObject, 365 * 24 * 60 * 60); // 1 year TTL in seconds
+	} catch (err) {
+		console.error("Error saving link lookup:", err);
+		throw err;
+	}
+}
 /**
  * Add a new story to storage
  */
 export const addStory = async (
 	kv: KeyValueStorage,
-	story: Story,
+	storyData: Omit<Story, "id">,
 ): Promise<void> => {
-	const id = generateId();
-	const storyKey = getStoryKey(id);
-	const dateKey = getDateKey(story.date_added.split("T")[0]);
-	const linkKey = getLinkToIdKey(story.link);
+	try {
+		// Generate ID and create full story object
+		const id = generateId();
+		const story: Story = {
+			id,
+			...storyData,
+			edited: storyData.edited || false,
+			published: storyData.published || false,
+		};
 
-	// Store the story
-	await kv.set(PREFIX, storyKey, story);
-
-	// Add to date index - we need to get the existing set, add the id, and save it back
-	const dateSet = await kv.get(PREFIX, dateKey);
-	const dateIds: string[] = dateSet ? (dateSet as unknown as string[]) : [];
-	dateIds.push(id);
-	await kv.set(PREFIX, dateKey, dateIds);
-
-	// Add to unpublished set
-	const unpublishedSet = await kv.get(PREFIX, getUnpublishedKey());
-	const unpublishedIds: string[] = unpublishedSet
-		? (unpublishedSet as unknown as string[])
-		: [];
-	unpublishedIds.push(id);
-	await kv.set(PREFIX, getUnpublishedKey(), unpublishedIds);
-
-	// Map link to id for lookups
-	await kv.set(PREFIX, linkKey, id);
-};
-
-/**
- * Get a story by its link
- */
-export const getStory = async (
-	kv: KeyValueStorage,
-	link: string,
-): Promise<Story | null> => {
-	const linkKey = getLinkToIdKey(link);
-	const id = await kv.get(PREFIX, linkKey);
-	if (!id) return null;
-
-	const storyKey = getStoryKey(id as unknown as string);
-	const data = await kv.get(PREFIX, storyKey);
-	if (!data) return null;
-
-	// We know it's actually a Story object, not an ArrayBuffer
-	const story = data as unknown as Story;
-
-	// Validate the story data
-	const parsed = StorySchema.safeParse(story);
-	return parsed.success ? parsed.data : null;
-};
-
-/**
- * Mark a story as published
- */
-export const markAsPublished = async (
-	kv: KeyValueStorage,
-	link: string,
-): Promise<void> => {
-	const linkKey = getLinkToIdKey(link);
-	const id = await kv.get(PREFIX, linkKey);
-	if (!id) return;
-
-	const storyKey = getStoryKey(id as unknown as string);
-	const data = await kv.get(PREFIX, storyKey);
-	if (!data) return;
-
-	const story = data as unknown as Story;
-
-	story.published = true;
-	story.date_published = new Date().toISOString();
-
-	// Update story
-	await kv.set(PREFIX, storyKey, story);
-
-	// Move from unpublished to published set
-	// Get unpublished set
-	const unpublishedSet = await kv.get(PREFIX, getUnpublishedKey());
-	if (unpublishedSet) {
-		const unpublishedIds = unpublishedSet as unknown as string[];
-		// Remove the id from the array
-		const updatedUnpublishedIds = unpublishedIds.filter((item) => item !== id);
-		// Save back to KV
-		await kv.set(PREFIX, getUnpublishedKey(), updatedUnpublishedIds);
-	}
-
-	// Add to published set
-	const publishedSet = await kv.get(PREFIX, getPublishedKey());
-	const publishedIds: string[] = publishedSet
-		? (publishedSet as unknown as string[])
-		: [];
-	publishedIds.push(id as unknown as string);
-	await kv.set(PREFIX, getPublishedKey(), publishedIds);
-};
-
-/**
- * Get stories by their IDs
- */
-const getStoriesByIds = async (
-	kv: KeyValueStorage,
-	ids: string[],
-): Promise<Story[]> => {
-	if (ids.length === 0) return [];
-
-	const stories: Story[] = [];
-
-	for (const id of ids) {
-		const storyKey = getStoryKey(id);
-		const data = await kv.get(PREFIX, storyKey);
-
-		if (data) {
-			// Convert data to Story object
-			const story = data as unknown as Story;
-
-			// Validate with zod
-			const parsed = StorySchema.safeParse(story);
-			if (parsed.success) {
-				stories.push(parsed.data);
-			}
+		// Default date_added if missing
+		if (!story.date_added) {
+			story.date_added = new Date().toISOString();
 		}
+
+		// Get date in YYYY-MM-DD format
+		const date = story.date_added.split("T")[0];
+
+		// Get existing stories for this date
+		const storiesCollection = await getStoriesForDate(kv, date);
+
+		// Ensure stories array exists
+		if (!storiesCollection.stories) {
+			storiesCollection.stories = [];
+		}
+
+		// Add the new story
+		storiesCollection.stories.push(story);
+		console.log(
+			`Adding story to collection: ${story.headline}`,
+			storiesCollection.stories.length,
+		);
+
+		// Save the updated collection
+		await saveStoriesForDate(kv, date, storiesCollection);
+
+		// Update link lookup
+		const lookup = await getLinkLookup(kv);
+		lookup[story.link] = id;
+		await saveLinkLookup(kv, lookup);
+
+		console.log(`Added story "${story.headline}" with ID ${id}`);
+	} catch (err) {
+		console.error("Error adding story:", err);
+		throw err;
 	}
-
-	return stories;
-};
-
-/**
- * Get all unpublished stories
- */
-export const getUnpublishedStories = async (
-	kv: KeyValueStorage,
-): Promise<Story[]> => {
-	const unpublishedSet = await kv.get(PREFIX, getUnpublishedKey());
-	if (!unpublishedSet) return [];
-
-	const ids = unpublishedSet as unknown as string[];
-	const stories = await getStoriesByIds(kv, ids);
-
-	return stories.sort(
-		(a, b) =>
-			new Date(b.date_added).getTime() - new Date(a.date_added).getTime(),
-	);
-};
-
-/**
- * Get all published stories
- */
-export const getPublishedStories = async (
-	kv: KeyValueStorage,
-): Promise<Story[]> => {
-	const publishedSet = await kv.get(PREFIX, getPublishedKey());
-	if (!publishedSet) return [];
-
-	const ids = publishedSet as unknown as string[];
-	const stories = await getStoriesByIds(kv, ids);
-
-	return stories.sort((a, b) => {
-		const dateA = a.date_published || a.date_added;
-		const dateB = b.date_published || b.date_added;
-		return new Date(dateB).getTime() - new Date(dateA).getTime();
-	});
 };
 
 /**
@@ -242,82 +220,193 @@ export const exists = async (
 	kv: KeyValueStorage,
 	link: string,
 ): Promise<boolean> => {
-	const linkKey = getLinkToIdKey(link);
-	const id = await kv.get(PREFIX, linkKey);
-	return id !== null;
+	const lookup = await getLinkLookup(kv);
+	return !!lookup[link];
 };
 
 /**
- * Get stories by date range
+ * Find a story by link across all collections
  */
-export const getStoriesByDateRange = async (
+export const getStory = async (
 	kv: KeyValueStorage,
-	startDate: Date,
-	endDate: Date,
-	options: {
-		publishedOnly?: boolean;
-		unpublishedOnly?: boolean;
-		limit?: number;
-	} = {},
+	link: string,
+): Promise<Story | null> => {
+	// Check link lookup first
+	const lookup = await getLinkLookup(kv);
+	const id = lookup[link];
+
+	if (!id) {
+		return null;
+	}
+
+	// Get today's date as default
+	const today = new Date().toISOString().split("T")[0];
+
+	// Try last 7 days (reasonable window to search)
+	for (let i = 0; i < 7; i++) {
+		const date = new Date();
+		date.setDate(date.getDate() - i);
+		const dateStr = date.toISOString().split("T")[0];
+
+		const collection = await getStoriesForDate(kv, dateStr);
+		const story = collection.stories.find((s) => s.id === id);
+
+		if (story) {
+			return story;
+		}
+	}
+
+	return null;
+};
+
+/**
+ * Get all stories for a specific date
+ */
+export const getStoriesByDate = async (
+	kv: KeyValueStorage,
+	date: string = new Date().toISOString().split("T")[0],
 ): Promise<Story[]> => {
-	const dates = getDatesInRange(startDate, endDate);
+	const collection = await getStoriesForDate(kv, date);
+	return collection.stories;
+};
 
-	// Get all story IDs from the date range
-	const allIds: string[] = [];
+/**
+ * Get stories for today
+ */
+export const getTodaysStories = async (
+	kv: KeyValueStorage,
+): Promise<Story[]> => {
+	const today = new Date().toISOString().split("T")[0];
+	return getStoriesByDate(kv, today);
+};
 
-	for (const date of dates) {
-		const dateKey = getDateKey(date);
-		const dateSet = await kv.get(PREFIX, dateKey);
+/**
+ * Get unedited stories for today
+ */
+export const getUneditedStories = async (
+	kv: KeyValueStorage,
+	date: string = new Date().toISOString().split("T")[0],
+): Promise<Story[]> => {
+	const stories = await getStoriesByDate(kv, date);
+	return stories.filter((story) => !story.edited && !story.published);
+};
 
-		if (dateSet) {
-			const dateIds = dateSet as unknown as string[];
-			allIds.push(...dateIds);
+/**
+ * Get edited but unpublished stories
+ */
+export const getEditedUnpublishedStories = async (
+	kv: KeyValueStorage,
+	date: string = new Date().toISOString().split("T")[0],
+): Promise<Story[]> => {
+	const stories = await getStoriesByDate(kv, date);
+	return stories.filter((story) => story.edited && !story.published);
+};
+
+/**
+ * Get published stories
+ */
+export const getPublishedStories = async (
+	kv: KeyValueStorage,
+	date: string = new Date().toISOString().split("T")[0],
+): Promise<Story[]> => {
+	const stories = await getStoriesByDate(kv, date);
+	return stories.filter((story) => story.published);
+};
+
+/**
+ * Update a story with new data
+ */
+export const updateStory = async (
+	kv: KeyValueStorage,
+	link: string,
+	updates: Partial<Story>,
+): Promise<void> => {
+	// Find the story's ID
+	const lookup = await getLinkLookup(kv);
+	const id = lookup[link];
+
+	if (!id) {
+		throw new Error(`No story found with link: ${link}`);
+	}
+
+	// Try last 7 days to find the story
+	let found = false;
+	for (let i = 0; i < 7; i++) {
+		const date = new Date();
+		date.setDate(date.getDate() - i);
+		const dateStr = date.toISOString().split("T")[0];
+
+		const collection = await getStoriesForDate(kv, dateStr);
+		const storyIndex = collection.stories.findIndex((s) => s.id === id);
+
+		if (storyIndex !== -1) {
+			// Update the story
+			const story = collection.stories[storyIndex];
+			Object.assign(story, updates);
+
+			// Always mark as edited
+			if (!updates.edited) {
+				story.edited = true;
+			}
+
+			// Save the collection
+			await saveStoriesForDate(kv, dateStr, collection);
+			found = true;
+			break;
 		}
 	}
 
-	// Remove duplicates
-	const uniqueIds = [...new Set(allIds)];
-
-	// If we need to filter by published status
-	let filteredIds = uniqueIds;
-	if (options.publishedOnly || options.unpublishedOnly) {
-		const statusKey = options.publishedOnly
-			? getPublishedKey()
-			: getUnpublishedKey();
-		const statusSet = await kv.get(PREFIX, statusKey);
-
-		if (statusSet) {
-			const statusIds = statusSet as unknown as string[];
-			filteredIds = uniqueIds.filter((id) => statusIds.includes(id));
-		} else {
-			return []; // No stories with the requested status
-		}
+	if (!found) {
+		throw new Error(`Story with ID ${id} not found in recent dates`);
 	}
+};
 
-	// Apply limit if specified
-	if (options.limit && options.limit > 0) {
-		filteredIds = filteredIds.slice(0, options.limit);
-	}
+/**
+ * Mark a story as edited
+ */
+export const markAsEdited = async (
+	kv: KeyValueStorage,
+	link: string,
+): Promise<void> => {
+	await updateStory(kv, link, { edited: true });
+};
 
-	// Fetch and parse stories
-	const stories = await getStoriesByIds(kv, filteredIds);
-
-	// Sort by date_added (or date_published for published stories)
-	return stories.sort((a, b) => {
-		const dateA =
-			options.publishedOnly && a.date_published
-				? a.date_published
-				: a.date_added;
-		const dateB =
-			options.publishedOnly && b.date_published
-				? b.date_published
-				: b.date_added;
-		return new Date(dateB).getTime() - new Date(dateA).getTime();
+/**
+ * Mark a story as published
+ */
+export const markAsPublished = async (
+	kv: KeyValueStorage,
+	link: string,
+): Promise<void> => {
+	await updateStory(kv, link, {
+		published: true,
+		date_published: new Date().toISOString(),
 	});
 };
 
 /**
- * Get stories from the last N days
+ * Debug function to see what's in storage
+ */
+export const debugKvContent = async (kv: KeyValueStorage): Promise<void> => {
+	// Check today's stories
+	const today = new Date().toISOString().split("T")[0];
+	const collection = await getStoriesForDate(kv, today);
+
+	console.log(`Today (${today}) has ${collection.stories.length} stories:`);
+	// Use for...of instead of forEach
+	for (const story of collection.stories) {
+		console.log(
+			`- ${story.headline} (${story.edited ? "edited" : "unedited"}, ${story.published ? "published" : "unpublished"})`,
+		);
+	}
+
+	// Check link lookup
+	const lookup = await getLinkLookup(kv);
+	console.log(`Link lookup has ${Object.keys(lookup).length} entries`);
+};
+
+/**
+ * Legacy compatibility function
  */
 export const getStoriesLastNDays = async (
 	kv: KeyValueStorage,
@@ -328,80 +417,34 @@ export const getStoriesLastNDays = async (
 		limit?: number;
 	} = {},
 ): Promise<Story[]> => {
-	const endDate = new Date();
-	const startDate = new Date();
-	startDate.setDate(startDate.getDate() - days);
+	const today = new Date().toISOString().split("T")[0];
 
-	return getStoriesByDateRange(kv, startDate, endDate, options);
-};
-
-/**
- * Update an existing story
- */
-export const updateStory = async (
-	kv: KeyValueStorage,
-	story: Story,
-): Promise<void> => {
-	const linkKey = getLinkToIdKey(story.link);
-	const id = await kv.get(PREFIX, linkKey);
-
-	if (!id) {
-		throw new Error(`No story found with link: ${story.link}`);
+	if (options.publishedOnly) {
+		return getPublishedStories(kv, today);
 	}
 
-	const storyKey = getStoryKey(id as unknown as string);
+	if (options.unpublishedOnly) {
+		const unedited = await getUneditedStories(kv, today);
+		const editedUnpublished = await getEditedUnpublishedStories(kv, today);
+		return [...unedited, ...editedUnpublished];
+	}
 
-	// Store the updated story
-	await kv.set(PREFIX, storyKey, story);
-};
-
-/**
- * Get unedited, unpublished stories
- */
-export const getUneditedUnpublishedStories = async (
-	kv: KeyValueStorage,
-): Promise<Story[]> => {
-	const unpublishedStories = await getUnpublishedStories(kv);
-
-	// Filter for unedited stories
-	const uneditedStories = unpublishedStories.filter((story) => !story.edited);
-
-	return uneditedStories.sort(
-		(a, b) =>
-			new Date(b.date_added).getTime() - new Date(a.date_added).getTime(),
-	);
-};
-
-/**
- * Get edited but unpublished stories
- */
-export const getEditedUnpublishedStories = async (
-	kv: KeyValueStorage,
-): Promise<Story[]> => {
-	const unpublishedStories = await getUnpublishedStories(kv);
-
-	// Filter for edited but unpublished stories
-	const editedStories = unpublishedStories.filter(
-		(story) => story.edited && !story.published,
-	);
-
-	return editedStories.sort(
-		(a, b) =>
-			new Date(b.date_added).getTime() - new Date(a.date_added).getTime(),
-	);
+	return getStoriesByDate(kv, today);
 };
 
 // Export all functions as a convenience object
 export const stories = {
-	get: getStory,
 	add: addStory,
-	update: updateStory,
-	markAsPublished,
-	getUnpublished: getUnpublishedStories,
-	getUneditedUnpublished: getUneditedUnpublishedStories,
+	get: getStory,
+	exists,
+	getByDate: getStoriesByDate,
+	getToday: getTodaysStories,
+	getUnedited: getUneditedStories,
 	getEditedUnpublished: getEditedUnpublishedStories,
 	getPublished: getPublishedStories,
-	exists,
-	getByDateRange: getStoriesByDateRange,
+	markAsEdited,
+	markAsPublished,
+	update: updateStory,
+	debug: debugKvContent,
 	getLastNDays: getStoriesLastNDays,
 };
