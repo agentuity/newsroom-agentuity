@@ -120,7 +120,6 @@ export default async function FilterAgentHandler(
 ) {
 	try {
 		ctx.logger.info("Filter: Starting to filter stories");
-
 		// Use input articles if provided, otherwise check request body
 		const json = req.json() as { articles?: Article[] };
 		const inputArticles = json?.articles;

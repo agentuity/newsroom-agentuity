@@ -4,7 +4,7 @@
     "": {
       "name": "newsroom",
       "dependencies": {
-        "@agentuity/sdk": "^0.0.75",
+        "@agentuity/sdk": "^0.0.77",
         "@ai-sdk/openai": "^1.2.1",
         "@mendable/firecrawl-js": "^1.19.0",
         "ai": "^4.1.54",
@@ -20,7 +20,7 @@
     },
   },
   "packages": {
-    "@agentuity/sdk": ["@agentuity/sdk@0.0.75", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.57.2", "@opentelemetry/auto-instrumentations-node": "^0.56.1", "@opentelemetry/exporter-logs-otlp-http": "^0.57.2", "@opentelemetry/exporter-metrics-otlp-http": "^0.57.2", "@opentelemetry/exporter-trace-otlp-http": "^0.57.2", "@opentelemetry/host-metrics": "^0.35.5", "@opentelemetry/resources": "^1.30.1", "@opentelemetry/sdk-logs": "^0.57.2", "@opentelemetry/sdk-metrics": "^1.30.1", "@opentelemetry/sdk-node": "^0.57.2", "@opentelemetry/semantic-conventions": "^1.30.0", "@standard-schema/spec": "^1.0.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-xthueFIGGHcA8U+U2rN3uHwFn2c44i+8Um4NNV61+8q9tU0Nt6Cq0L88zLGkormpHaRnIAKFQgFbHouSxMKsbg=="],
+    "@agentuity/sdk": ["@agentuity/sdk@0.0.77", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.57.2", "@opentelemetry/auto-instrumentations-node": "^0.56.1", "@opentelemetry/exporter-logs-otlp-http": "^0.57.2", "@opentelemetry/exporter-metrics-otlp-http": "^0.57.2", "@opentelemetry/exporter-trace-otlp-http": "^0.57.2", "@opentelemetry/host-metrics": "^0.35.5", "@opentelemetry/resources": "^1.30.1", "@opentelemetry/sdk-logs": "^0.57.2", "@opentelemetry/sdk-metrics": "^1.30.1", "@opentelemetry/sdk-node": "^0.57.2", "@opentelemetry/semantic-conventions": "^1.30.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-3EoLrjQh2XCfR31YBfVxc7iOvYnrsQru8z1Nzq8crYPgQqvWzSDjErHU9YCwWUXIf6LXifELb2z3Rw90TMCuHw=="],
 
     "@ai-sdk/openai": ["@ai-sdk/openai@1.2.1", "", { "dependencies": { "@ai-sdk/provider": "1.0.10", "@ai-sdk/provider-utils": "2.1.11" }, "peerDependencies": { "zod": "^3.0.0" } }, "sha512-UtVDNrmrKzb3b4T9bnpduXs4FKpWGn+sH5qaFP1mtxOPeYGUF9OoJfGilH3CNfqGAE4QdZh/LT3IV6GHacooGg=="],
 
@@ -213,8 +213,6 @@
     "@protobufjs/pool": ["@protobufjs/pool@1.1.0", "", {}, "sha512-0kELaGSIDBKvcgS4zkjz1PeddatrjYcmMWOlAuAPwAeccUrPHdUqo/J6LiymHHEiJT5NrF1UVwxY14f+fy4WQw=="],
 
     "@protobufjs/utf8": ["@protobufjs/utf8@1.1.0", "", {}, "sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw=="],
-
-    "@standard-schema/spec": ["@standard-schema/spec@1.0.0", "", {}, "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="],
 
     "@types/aws-lambda": ["@types/aws-lambda@8.10.147", "", {}, "sha512-nD0Z9fNIZcxYX5Mai2CTmFD7wX7UldCkW2ezCF8D1T5hdiLsnTWDGRpfRYntU6VjTdLQjOvyszru7I1c1oCQew=="],
 

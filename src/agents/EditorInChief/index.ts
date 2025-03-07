@@ -2,6 +2,7 @@ import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
 import { stories } from "../../../lib/data/stories";
 import { postPodcastToSlack } from "../../../lib/notifications";
 import type { PodcastTranscript } from "../../../lib/data/podcast";
+import type { Article } from "../../../lib/data/research";
 
 // TODO
 // Right now this runs the entire flow end to end - but in reality the research stories
@@ -19,16 +20,21 @@ export default async function EditorInChiefAgentHandler(
 	 * This segment is a full workflow segment
 	 */
 	const investigatorAgent = await ctx.getAgent({
-		// id: "agent_KqdnT67c9b6a8gm4tNUGHR86liUC2dd5",
 		name: "Investigator",
 	});
-	const researchedStories = await investigatorAgent.run({});
-	ctx.logger.info("Investigator: Stories", researchedStories);
+	const researchedStoriesRun = await investigatorAgent.run({});
+	// This is temp. hack until we handle the base64 payloads properly
+	const researchedStories = JSON.parse(
+		Buffer.from(researchedStoriesRun.payload as string, "utf-8").toString(
+			"base64",
+		),
+	) as { articles: Article[] };
+	ctx.logger.info("Investigator: Stories@@@@@@@@", researchedStories);
 
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
 	});
-	const filteredStories = await filterAgent.run(researchedStories.payload);
+	const filteredStories = await filterAgent.run(researchedStories);
 	ctx.logger.info("Filter: Filtered stories", filteredStories);
 
 	const editorAgent = await ctx.getAgent({
