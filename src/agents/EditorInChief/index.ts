@@ -22,7 +22,10 @@ export default async function EditorInChiefAgentHandler(
 	const investigatorAgent = await ctx.getAgent({
 		name: "Investigator",
 	});
-	const researchedStoriesRun = await investigatorAgent.run({});
+	const researchedStoriesRun = await investigatorAgent.run({ 
+		data: {}, 
+		contentType: "application/json" 
+	});
 	// This is temp. hack until we handle the base64 payloads properly
 	const decodedResearchedStoriesPayload = JSON.parse(
 		Buffer.from(researchedStoriesRun.payload as string, "base64").toString(
@@ -34,9 +37,10 @@ export default async function EditorInChiefAgentHandler(
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
 	});
-	const filteredStories = await filterAgent.run(
-		decodedResearchedStoriesPayload,
-	);
+	const filteredStories = await filterAgent.run({
+		data: decodedResearchedStoriesPayload,
+		contentType: "application/json"
+	});
 	// This is temp. hack until we handle the base64 payloads properly
 	const decodedFilteredStoriesPayload = JSON.parse(
 		Buffer.from(filteredStories.payload as string, "base64").toString("utf-8"),
@@ -46,7 +50,10 @@ export default async function EditorInChiefAgentHandler(
 	const editorAgent = await ctx.getAgent({
 		name: "Editor",
 	});
-	const editedStories = await editorAgent.run(decodedFilteredStoriesPayload);
+	const editedStories = await editorAgent.run({
+		data: decodedFilteredStoriesPayload,
+		contentType: "application/json"
+	});
 	// This is temp. hack until we handle the base64 payloads properly
 	const decodedEditedStoriesPayload = JSON.parse(
 		Buffer.from(editedStories.payload as string, "base64").toString("utf-8"),
@@ -66,10 +73,13 @@ export default async function EditorInChiefAgentHandler(
 		name: "PodcastEditor",
 	});
 	const podcastTranscript = await podcastEditorAgent.run({
-		dateRange: {
-			start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-			end: new Date().toISOString(),
+		data: {
+			dateRange: {
+				start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+				end: new Date().toISOString(),
+			},
 		},
+		contentType: "application/json"
 	});
 	// This is temp. hack until we handle the base64 payloads properly
 	const decodedPodcastTranscriptPayload = JSON.parse(
@@ -87,9 +97,10 @@ export default async function EditorInChiefAgentHandler(
 		const podcastVoiceAgent = await ctx.getAgent({
 			name: "PodcastVoice",
 		});
-		const podcastVoice = await podcastVoiceAgent.run(
-			decodedPodcastTranscriptPayload,
-		);
+		const podcastVoice = await podcastVoiceAgent.run({
+			data: decodedPodcastTranscriptPayload,
+			contentType: "application/json"
+		});
 		// This is temp. hack until we handle the base64 payloads properly
 		const decodedPodcastVoicePayload = JSON.parse(
 			Buffer.from(podcastVoice.payload as string, "base64").toString("utf-8"),
@@ -107,5 +118,5 @@ export default async function EditorInChiefAgentHandler(
 		}
 	}
 
-	return resp.text("Editor in chief is done");
+	return await resp.text("Editor in chief is done");
 }

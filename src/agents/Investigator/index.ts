@@ -145,7 +145,7 @@ export default async function InvestigatorAgentHandler(
 		ctx.logger.info("No articles found to save");
 	}
 
-	return resp.json(
+	return await resp.json(
 		{
 			articles,
 		},

@@ -173,7 +173,7 @@ export default async function EditorAgentHandler(
 
 	if (!uneditedStories || uneditedStories.length === 0) {
 		ctx.logger.info("No unedited stories to process");
-		return resp.json({ editedStories: [] });
+		return await resp.json({ editedStories: [] });
 	}
 
 	ctx.logger.info(
@@ -251,5 +251,5 @@ export default async function EditorAgentHandler(
 	ctx.logger.info(`Editor: Finished enhancing ${editedStories.length} stories`);
 
 	// Return as response if called directly as an agent
-	return resp.json({ stories: editedStories });
+	return await resp.json({ stories: editedStories });
 }

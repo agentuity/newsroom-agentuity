@@ -131,7 +131,7 @@ export default async function PodcastVoiceAgentHandler(
 	if (!transcript) {
 		// Check if we found a transcript
 		ctx.logger.error("PodcastVoice: No transcript found");
-		return resp.json({
+		return await resp.json({
 			success: false,
 			error: "No transcript found",
 		});
@@ -140,7 +140,7 @@ export default async function PodcastVoiceAgentHandler(
 	if (transcript.audio_url) {
 		// Check if transcript already has audio
 		ctx.logger.info("PodcastVoice: Transcript already has audio");
-		return resp.json({
+		return await resp.json({
 			success: true,
 			message: "Transcript already has audio",
 			audioUrl: transcript.audio_url,
@@ -171,14 +171,14 @@ export default async function PodcastVoiceAgentHandler(
 		ctx.logger.info("PodcastVoice: Updated podcast record with audio URL");
 	} catch (error) {
 		ctx.logger.error("PodcastVoice: Failed to upload to R2", error);
-		return resp.json({
+		return await resp.json({
 			success: false,
 			error: `Failed to upload to R2: ${error}`,
 		});
 	}
 
 	// Return success response
-	return resp.json({
+	return await resp.json({
 		success: true,
 		filename,
 		audioUrl,
