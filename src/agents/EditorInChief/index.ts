@@ -26,12 +26,8 @@ export default async function EditorInChiefAgentHandler(
 		data: {}, 
 		contentType: "application/json" 
 	});
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedResearchedStoriesPayload = JSON.parse(
-		Buffer.from(researchedStoriesRun.payload as string, "base64").toString(
-			"utf-8",
-		),
-	);
+	// Use the new Data interface to access the payload
+	const decodedResearchedStoriesPayload = (researchedStoriesRun as any).data.json;
 	ctx.logger.info("Researched stories:", decodedResearchedStoriesPayload);
 
 	const filterAgent = await ctx.getAgent({
@@ -41,10 +37,8 @@ export default async function EditorInChiefAgentHandler(
 		data: decodedResearchedStoriesPayload,
 		contentType: "application/json"
 	});
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedFilteredStoriesPayload = JSON.parse(
-		Buffer.from(filteredStories.payload as string, "base64").toString("utf-8"),
-	);
+	// Use the new Data interface to access the payload
+	const decodedFilteredStoriesPayload = (filteredStories as any).data.json;
 	ctx.logger.info("Filter: Filtered stories", decodedFilteredStoriesPayload);
 
 	const editorAgent = await ctx.getAgent({
@@ -54,10 +48,8 @@ export default async function EditorInChiefAgentHandler(
 		data: decodedFilteredStoriesPayload,
 		contentType: "application/json"
 	});
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedEditedStoriesPayload = JSON.parse(
-		Buffer.from(editedStories.payload as string, "base64").toString("utf-8"),
-	);
+	// Use the new Data interface to access the payload
+	const decodedEditedStoriesPayload = (editedStories as any).data.json;
 	ctx.logger.info("Editor: Edited stories", decodedEditedStoriesPayload);
 
 	// Publish stories
@@ -81,12 +73,8 @@ export default async function EditorInChiefAgentHandler(
 		},
 		contentType: "application/json"
 	});
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedPodcastTranscriptPayload = JSON.parse(
-		Buffer.from(podcastTranscript.payload as string, "base64").toString(
-			"utf-8",
-		),
-	);
+	// Use the new Data interface to access the payload
+	const decodedPodcastTranscriptPayload = (podcastTranscript as any).data.json;
 	ctx.logger.info(
 		"PodcastEditor: Podcast transcript",
 		decodedPodcastTranscriptPayload,
@@ -101,10 +89,8 @@ export default async function EditorInChiefAgentHandler(
 			data: decodedPodcastTranscriptPayload,
 			contentType: "application/json"
 		});
-		// This is temp. hack until we handle the base64 payloads properly
-		const decodedPodcastVoicePayload = JSON.parse(
-			Buffer.from(podcastVoice.payload as string, "base64").toString("utf-8"),
-		);
+		// Use the new Data interface to access the payload
+		const decodedPodcastVoicePayload = (podcastVoice as any).data.json;
 		console.log("PodcastVoice: Podcast voice", decodedPodcastVoicePayload);
 
 		// Publish podcast to a slack channel

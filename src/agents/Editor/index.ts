@@ -165,7 +165,7 @@ export default async function EditorAgentHandler(
 	ctx.logger.info("Editor: Starting to enhance stories");
 
 	// Use input stories if provided, otherwise check request body
-	const json = req.json() as { stories?: Story[] };
+	const json = req.data ? (req.data.json as { stories?: Story[] }) : {};
 	let uneditedStories = json?.stories;
 	if (!uneditedStories) {
 		uneditedStories = await stories.getUnedited(ctx.kv);

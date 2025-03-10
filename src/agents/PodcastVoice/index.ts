@@ -119,7 +119,7 @@ export default async function PodcastVoiceAgentHandler(
 	let transcript: PodcastTranscript | null = null;
 
 	// Check if request contains a transcript ID or date
-	const requestData = req.json();
+	const requestData = req.data ? req.data.json : null;
 	if (requestData && typeof requestData === "object") {
 		if ("transcript" in requestData) {
 			transcript = requestData.transcript as PodcastTranscript;

@@ -81,10 +81,10 @@ export default async function PodcastEditorAgentHandler(
 	ctx.logger.info("PodcastEditor: Starting to create podcast transcript");
 
 	// Parse the request data
-	const reqData = req.json() as {
+	const reqData = req.data ? (req.data.json as {
 		dateRange?: { start: string; end: string };
 		override?: boolean;
-	};
+	}) : {};
 
 	// Extract date range and options from request
 	const dateRange = reqData?.dateRange
