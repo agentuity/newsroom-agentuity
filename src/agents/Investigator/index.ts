@@ -119,7 +119,7 @@ export default async function InvestigatorAgentHandler(
 	ctx: AgentContext,
 ) {
 	ctx.logger.info("Investigator: Start looking for stories");
-	const json = req.json() as { dynamicSources?: string[] };
+	const json = req.data ? (req.data.json as { dynamicSources?: string[] }) : {};
 	const dynamicSources = json?.dynamicSources;
 	const sources = [...DEFAULT_SOURCES, ...(dynamicSources ?? [])];
 
@@ -145,7 +145,7 @@ export default async function InvestigatorAgentHandler(
 		ctx.logger.info("No articles found to save");
 	}
 
-	return resp.json(
+	return await resp.json(
 		{
 			articles,
 		},

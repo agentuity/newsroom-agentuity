@@ -81,10 +81,10 @@ export default async function PodcastEditorAgentHandler(
 	ctx.logger.info("PodcastEditor: Starting to create podcast transcript");
 
 	// Parse the request data
-	const reqData = req.json() as {
+	const reqData = req.data ? (req.data.json as {
 		dateRange?: { start: string; end: string };
 		override?: boolean;
-	};
+	}) : {};
 
 	// Extract date range and options from request
 	const dateRange = reqData?.dateRange
@@ -113,7 +113,7 @@ export default async function PodcastEditorAgentHandler(
 
 	if (publishedStories.length === 0) {
 		ctx.logger.info("PodcastEditor: No stories found for date");
-		return resp.json({
+		return await resp.json({
 			success: false,
 			message: "No stories found for date",
 		});
@@ -125,7 +125,7 @@ export default async function PodcastEditorAgentHandler(
 		ctx.logger.info(
 			"PodcastEditor: Podcast transcript already exists for this date",
 		);
-		return resp.json({
+		return await resp.json({
 			success: true,
 			message:
 				"Podcast transcript already exists for this date. Use override option to regenerate.",
@@ -148,7 +148,7 @@ export default async function PodcastEditorAgentHandler(
 
 	ctx.logger.info("PodcastEditor: Generated podcast transcript successfully");
 
-	return resp.json({
+	return await resp.json({
 		transcript: savedTranscript,
 	});
 }

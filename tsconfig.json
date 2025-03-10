@@ -21,7 +21,8 @@
     "target": "ESNext",
     "types": [
       "bun",
-      "@agentuity/sdk"
+      "@agentuity/sdk",
+      "node"
     ],
     "verbatimModuleSyntax": true
   }

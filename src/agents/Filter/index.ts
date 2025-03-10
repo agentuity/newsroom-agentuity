@@ -121,13 +121,13 @@ export default async function FilterAgentHandler(
 	try {
 		ctx.logger.info("Filter: Starting to filter stories");
 		// Use input articles if provided, otherwise check request body
-		const json = req.json() as { articles?: Article[] };
+		const json = req.data ? (req.data.json as { articles?: Article[] }) : {};
 		const inputArticles = json?.articles;
 		let articles = inputArticles;
 		if (!articles) {
-			const json = req.json();
-			if (json && typeof json === "object" && "articles" in json) {
-				articles = json.articles as Article[];
+			const jsonData = req.data ? req.data.json : null;
+			if (jsonData && typeof jsonData === "object" && "articles" in jsonData) {
+				articles = jsonData.articles as Article[];
 			} else {
 				// Get today's research articles if no articles were provided
 				articles = await getTodaysResearch(ctx.kv);
@@ -136,7 +136,7 @@ export default async function FilterAgentHandler(
 
 		if (!articles || articles.length === 0) {
 			ctx.logger.info("No articles to filter");
-			return resp.json({ filteredStories: [] });
+			return await resp.json({ filteredStories: [] });
 		}
 
 		ctx.logger.info(`Filter: Processing ${articles.length} articles`);
@@ -212,7 +212,7 @@ export default async function FilterAgentHandler(
 		);
 
 		// Return as response if called directly as an agent
-		return resp.json({ stories: filteredStories });
+		return await resp.json({ stories: filteredStories });
 	} catch (error) {
 		ctx.logger.error("Error in FilterAgent:", error);
 		throw error;

@@ -110,7 +110,7 @@ async function saveStoriesForDate(
 			PREFIX,
 			key,
 			collection as unknown as Json,
-			365 * 24 * 60 * 60,
+			{ ttl: 365 * 24 * 60 * 60 },
 		); // 1 year TTL in seconds
 		console.log(`Successfully saved stories for date ${date}`);
 	} catch (err) {
@@ -152,7 +152,7 @@ async function saveLinkLookup(
 	try {
 		// Create a new object instead of reassigning parameter
 		const safeObject = lookup || {};
-		await kv.set(PREFIX, "links", safeObject, 365 * 24 * 60 * 60); // 1 year TTL in seconds
+		await kv.set(PREFIX, "links", safeObject, { ttl: 365 * 24 * 60 * 60 }); // 1 year TTL in seconds
 	} catch (err) {
 		console.error("Error saving link lookup:", err);
 		throw err;

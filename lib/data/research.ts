@@ -94,7 +94,7 @@ export const saveResearch = async (
 
 	// Store with 14 days TTL (in seconds)
 	const ttl = 14 * 24 * 60 * 60;
-	await kv.set(PREFIX, todayKey, data, ttl);
+	await kv.set(PREFIX, todayKey, data, { ttl });
 };
 
 /**

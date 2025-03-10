@@ -22,35 +22,34 @@ export default async function EditorInChiefAgentHandler(
 	const investigatorAgent = await ctx.getAgent({
 		name: "Investigator",
 	});
-	const researchedStoriesRun = await investigatorAgent.run({});
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedResearchedStoriesPayload = JSON.parse(
-		Buffer.from(researchedStoriesRun.payload as string, "base64").toString(
-			"utf-8",
-		),
-	);
+	const researchedStoriesRun = await investigatorAgent.run({ 
+		data: {}, 
+		contentType: "application/json" 
+	});
+	// Use the new Data interface to access the payload
+	const decodedResearchedStoriesPayload = (researchedStoriesRun as any).data.json;
 	ctx.logger.info("Researched stories:", decodedResearchedStoriesPayload);
 
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
 	});
-	const filteredStories = await filterAgent.run(
-		decodedResearchedStoriesPayload,
-	);
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedFilteredStoriesPayload = JSON.parse(
-		Buffer.from(filteredStories.payload as string, "base64").toString("utf-8"),
-	);
+	const filteredStories = await filterAgent.run({
+		data: decodedResearchedStoriesPayload,
+		contentType: "application/json"
+	});
+	// Use the new Data interface to access the payload
+	const decodedFilteredStoriesPayload = (filteredStories as any).data.json;
 	ctx.logger.info("Filter: Filtered stories", decodedFilteredStoriesPayload);
 
 	const editorAgent = await ctx.getAgent({
 		name: "Editor",
 	});
-	const editedStories = await editorAgent.run(decodedFilteredStoriesPayload);
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedEditedStoriesPayload = JSON.parse(
-		Buffer.from(editedStories.payload as string, "base64").toString("utf-8"),
-	);
+	const editedStories = await editorAgent.run({
+		data: decodedFilteredStoriesPayload,
+		contentType: "application/json"
+	});
+	// Use the new Data interface to access the payload
+	const decodedEditedStoriesPayload = (editedStories as any).data.json;
 	ctx.logger.info("Editor: Edited stories", decodedEditedStoriesPayload);
 
 	// Publish stories
@@ -66,17 +65,16 @@ export default async function EditorInChiefAgentHandler(
 		name: "PodcastEditor",
 	});
 	const podcastTranscript = await podcastEditorAgent.run({
-		dateRange: {
-			start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-			end: new Date().toISOString(),
+		data: {
+			dateRange: {
+				start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+				end: new Date().toISOString(),
+			},
 		},
+		contentType: "application/json"
 	});
-	// This is temp. hack until we handle the base64 payloads properly
-	const decodedPodcastTranscriptPayload = JSON.parse(
-		Buffer.from(podcastTranscript.payload as string, "base64").toString(
-			"utf-8",
-		),
-	);
+	// Use the new Data interface to access the payload
+	const decodedPodcastTranscriptPayload = (podcastTranscript as any).data.json;
 	ctx.logger.info(
 		"PodcastEditor: Podcast transcript",
 		decodedPodcastTranscriptPayload,
@@ -87,13 +85,12 @@ export default async function EditorInChiefAgentHandler(
 		const podcastVoiceAgent = await ctx.getAgent({
 			name: "PodcastVoice",
 		});
-		const podcastVoice = await podcastVoiceAgent.run(
-			decodedPodcastTranscriptPayload,
-		);
-		// This is temp. hack until we handle the base64 payloads properly
-		const decodedPodcastVoicePayload = JSON.parse(
-			Buffer.from(podcastVoice.payload as string, "base64").toString("utf-8"),
-		);
+		const podcastVoice = await podcastVoiceAgent.run({
+			data: decodedPodcastTranscriptPayload,
+			contentType: "application/json"
+		});
+		// Use the new Data interface to access the payload
+		const decodedPodcastVoicePayload = (podcastVoice as any).data.json;
 		console.log("PodcastVoice: Podcast voice", decodedPodcastVoicePayload);
 
 		// Publish podcast to a slack channel
@@ -107,5 +104,5 @@ export default async function EditorInChiefAgentHandler(
 		}
 	}
 
-	return resp.text("Editor in chief is done");
+	return await resp.text("Editor in chief is done");
 }
