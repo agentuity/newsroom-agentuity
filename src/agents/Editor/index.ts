@@ -209,13 +209,35 @@ export default async function EditorAgentHandler(
 
 				// Update the existing story in storage
 				try {
-					await stories.update(ctx.kv, story.link, {
-						headline: enhanced.headline,
-						summary: enhanced.summary,
-						body: enhanced.body,
-						tags: enhanced.tags,
-						edited: true,
-					});
+					// First check if the story exists in the KV store
+					const storyExists = await stories.exists(ctx.kv, story.link);
+
+					if (!storyExists) {
+						// If the story doesn't exist, add it directly with enhanced content
+						ctx.logger.info(
+							`Story not found in KV store, adding enhanced version: ${story.headline}`,
+						);
+						await stories.add(ctx.kv, {
+							...story,
+							headline: enhanced.headline,
+							summary: enhanced.summary,
+							body: enhanced.body,
+							tags: enhanced.tags,
+							link: story.link,
+							source: story.source,
+							date_added: story.date_added || new Date().toISOString(),
+							edited: true,
+						});
+					} else {
+						// If it exists, just update it with enhanced content
+						await stories.update(ctx.kv, story.link, {
+							headline: enhanced.headline,
+							summary: enhanced.summary,
+							body: enhanced.body,
+							tags: enhanced.tags,
+							edited: true,
+						});
+					}
 
 					editedStories.push(updatedStory);
 

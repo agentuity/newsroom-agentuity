@@ -194,13 +194,8 @@ export default async function FilterAgentHandler(
 			};
 
 			// Add the story to storage
-			await stories.add(ctx.kv, storyData);
-
-			// Now fetch the complete story (with ID) to add to filtered stories
-			const completeStory = await stories.get(ctx.kv, storyData.link);
-			if (completeStory) {
-				filteredStories.push(completeStory);
-			}
+			const story = await stories.add(ctx.kv, storyData);
+			filteredStories.push(story);
 
 			ctx.logger.info(`Added new story: ${article.headline}`);
 			ctx.logger.info(`Relevance confidence: ${relevance.confidence}`);

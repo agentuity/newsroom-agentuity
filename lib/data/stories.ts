@@ -106,12 +106,9 @@ async function saveStoriesForDate(
 		collection.updated = new Date().toISOString();
 
 		console.log(PREFIX, key, collection);
-		await kv.set(
-			PREFIX,
-			key,
-			collection as unknown as Json,
-			{ ttl: 365 * 24 * 60 * 60 },
-		); // 1 year TTL in seconds
+		await kv.set(PREFIX, key, collection as unknown as Json, {
+			ttl: 365 * 24 * 60 * 60,
+		}); // 1 year TTL in seconds
 		console.log(`Successfully saved stories for date ${date}`);
 	} catch (err) {
 		console.error(`Error saving stories for date ${date}:`, err);
@@ -164,7 +161,7 @@ async function saveLinkLookup(
 export const addStory = async (
 	kv: KeyValueStorage,
 	storyData: Omit<Story, "id">,
-): Promise<void> => {
+): Promise<Story> => {
 	try {
 		// Generate ID and create full story object
 		const id = generateId();
@@ -207,6 +204,7 @@ export const addStory = async (
 		await saveLinkLookup(kv, lookup);
 
 		console.log(`Added story "${story.headline}" with ID ${id}`);
+		return story;
 	} catch (err) {
 		console.error("Error adding story:", err);
 		throw err;

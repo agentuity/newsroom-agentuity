@@ -9,14 +9,7 @@
 		"prestart": "agentuity bundle",
 		"start": "bun run .agentuity/index.js"
 	},
-	"keywords": [
-		"agentuity",
-		"agent",
-		"ai",
-		"ai agent",
-		"vercel",
-		"bun"
-	],
+	"keywords": ["agentuity", "agent", "ai", "ai agent", "vercel", "bun"],
 	"devDependencies": {
 		"@ai-sdk/openai": "^1.2.1",
 		"@types/bun": "latest",
@@ -28,7 +21,7 @@
 		"typescript": "^5.0.0"
 	},
 	"dependencies": {
-		"@agentuity/sdk": "^0.0.79",
+		"@agentuity/sdk": "^0.0.80",
 		"@mendable/firecrawl-js": "^1.19.0",
 		"bun-types": "^1.2.4",
 		"zod": "^3.24.2"
