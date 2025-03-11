@@ -74,3 +74,6 @@ A monorepo containing a set of AI agents designed to gather, process, and publis
 - Automatic URL management
 - Date-based file organization
 
+
+This project is an Agentuity JS SDK project.  Reference https://agentuity.dev/SDKs/javascript for more information.
+
