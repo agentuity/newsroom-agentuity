@@ -173,14 +173,15 @@ export default async function EditorAgentHandler(
 
 	if (!uneditedStories || uneditedStories.length === 0) {
 		ctx.logger.info("No unedited stories to process");
-		return await resp.json({ editedStories: [] });
+		return await resp.json({ links: [] });
 	}
 
 	ctx.logger.info(
 		`Editor: Processing ${uneditedStories.length} unedited stories`,
 	);
 
-	const editedStories: Story[] = [];
+	// Store only links instead of full story objects
+	const editedLinks: string[] = [];
 
 	// Process stories in batches
 	for (let i = 0; i < uneditedStories.length; i += BATCH_SIZE) {
@@ -201,6 +202,7 @@ export default async function EditorAgentHandler(
 				try {
 					// First check if the story exists in the KV store
 					const storyExists = await stories.exists(ctx.kv, story.link);
+					const now = new Date().toISOString();
 
 					if (!storyExists) {
 						// If the story doesn't exist, add it directly with enhanced content
@@ -215,8 +217,10 @@ export default async function EditorAgentHandler(
 							tags: enhanced.tags,
 							link: story.link,
 							source: story.source,
-							date_added: story.date_added || new Date().toISOString(),
+							date_added: story.date_added || now,
 							edited: true,
+							published: true, // Mark as published directly
+							date_published: now,
 						});
 					} else {
 						// If it exists, just update it with enhanced content
@@ -226,25 +230,15 @@ export default async function EditorAgentHandler(
 							body: enhanced.body,
 							tags: enhanced.tags,
 							edited: true,
+							published: true, // Mark as published directly
+							date_published: now,
 						});
 					}
 
-					// Create the updated story object with enhanced data
-					const updatedStory = {
-						...story,
-						headline: enhanced.headline,
-						summary: enhanced.summary,
-						body: enhanced.body,
-						tags: enhanced.tags,
-						link: story.link,
-						source: story.source,
-						date_added: story.date_added || new Date().toISOString(),
-						edited: true,
-					};
+					// Only store the link, not the entire story object
+					editedLinks.push(story.link);
 
-					editedStories.push(updatedStory);
-
-					ctx.logger.info(`Enhanced story: ${enhanced.headline}`);
+					ctx.logger.info(`Enhanced and published story: ${enhanced.headline}`);
 					ctx.logger.info(`Reason for changes: ${enhanced.reason}`);
 					ctx.logger.info(`Added tags: ${enhanced.tags.join(", ")}`);
 				} catch (error) {
@@ -273,8 +267,11 @@ export default async function EditorAgentHandler(
 		}
 	}
 
-	ctx.logger.info(`Editor: Finished enhancing ${editedStories.length} stories`);
+	ctx.logger.info(
+		`Editor: Finished enhancing and publishing ${editedLinks.length} stories`,
+	);
+	ctx.logger.info(`Editor: Returning ${editedLinks.length} story links`);
 
-	// Return as response if called directly as an agent
-	return await resp.json({ stories: editedStories });
+	// Return only links as response if called directly as an agent
+	return await resp.json({ links: editedLinks });
 }

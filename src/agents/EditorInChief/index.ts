@@ -52,20 +52,17 @@ export default async function EditorInChiefAgentHandler(
 	});
 	ctx.logger.info("Editor: Edited stories", editedStories.data);
 
-	// Publish stories
-	const unpublishedStories =
+	// Get story links from the response
+	const storyLinks =
 		(
 			editedStories.data?.json as {
-				stories: Story[];
+				links: string[];
 			}
-		)?.stories || [];
+		)?.links || [];
+
 	ctx.logger.info(
-		`EditorInChief: Publishing ${unpublishedStories.length} stories`,
+		`EditorInChief: Editor has processed ${storyLinks.length} stories`,
 	);
-	for (const story of unpublishedStories) {
-		ctx.logger.info(`Publishing: ${story.headline}`);
-		await stories.markAsPublished(ctx.kv, story.link);
-	}
 
 	// Prep for podcast
 	const podcastEditorAgent = await ctx.getAgent({
