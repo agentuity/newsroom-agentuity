@@ -12,11 +12,11 @@ const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
 // Default content sources
 const DEFAULT_SOURCES = [
-	"https://news.ycombinator.com/",
-	"https://techcrunch.com/latest/",
-	"https://openai.com/news/",
-	"https://www.anthropic.com/news",
-	"https://aisecret.us/",
+	// "https://news.ycombinator.com/",
+	// "https://techcrunch.com/latest/",
+	// "https://openai.com/news/",
+	// "https://www.anthropic.com/news",
+	// "https://aisecret.us/",
 	"https://www.theneurondaily.com/",
 ];
 
@@ -130,7 +130,9 @@ export default async function InvestigatorAgentHandler(
 		const todaysResearch = await getTodaysResearch(ctx.kv);
 		if (todaysResearch) {
 			ctx.logger.info("Using today's research");
-			return todaysResearch;
+			return await resp.json({
+				articles: todaysResearch,
+			});
 		}
 	}
 

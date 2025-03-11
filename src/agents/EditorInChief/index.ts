@@ -53,7 +53,12 @@ export default async function EditorInChiefAgentHandler(
 	ctx.logger.info("Editor: Edited stories", editedStories.data);
 
 	// Publish stories
-	const unpublishedStories = await stories.getEditedUnpublished(ctx.kv);
+	const unpublishedStories =
+		(
+			editedStories.data?.json as {
+				stories: Story[];
+			}
+		)?.stories || [];
 	ctx.logger.info(
 		`EditorInChief: Publishing ${unpublishedStories.length} stories`,
 	);

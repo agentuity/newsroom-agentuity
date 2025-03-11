@@ -197,16 +197,6 @@ export default async function EditorAgentHandler(
 				// Get enhanced content
 				const enhanced = await enhanceContent(story, ctx.logger);
 
-				// Update the story with enhanced content
-				const updatedStory: Story = {
-					...story,
-					headline: enhanced.headline,
-					summary: enhanced.summary,
-					body: enhanced.body,
-					tags: enhanced.tags,
-					edited: true,
-				};
-
 				// Update the existing story in storage
 				try {
 					// First check if the story exists in the KV store
@@ -238,6 +228,19 @@ export default async function EditorAgentHandler(
 							edited: true,
 						});
 					}
+
+					// Create the updated story object with enhanced data
+					const updatedStory = {
+						...story,
+						headline: enhanced.headline,
+						summary: enhanced.summary,
+						body: enhanced.body,
+						tags: enhanced.tags,
+						link: story.link,
+						source: story.source,
+						date_added: story.date_added || new Date().toISOString(),
+						edited: true,
+					};
 
 					editedStories.push(updatedStory);
 

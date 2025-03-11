@@ -54,7 +54,6 @@ export const getTodaysResearch = async (
 	const data = await kv.get(PREFIX, todayKey);
 	if (!data) return undefined;
 
-	// The actual data is likely JSON, not ArrayBuffer as incorrectly typed
 	const researchData = data as unknown as ResearchData;
 	return researchData.articles;
 };
