@@ -2,8 +2,8 @@ import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
 import { z } from "zod";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
-import { stories, type Story } from "../../../lib/data/stories";
-import { podcast, type PodcastTranscript } from "../../../lib/data/podcast";
+import { getPublishedStories, type Story } from "../../lib/data/stories";
+import { podcast, type PodcastTranscript } from "../../lib/data/podcast";
 
 /**
  * Creates a podcast transcript from stories
@@ -81,10 +81,12 @@ export default async function PodcastEditorAgentHandler(
 	ctx.logger.info("PodcastEditor: Starting to create podcast transcript");
 
 	// Parse the request data
-	const reqData = req.data ? (req.data.json as {
-		dateRange?: { start: string; end: string };
-		override?: boolean;
-	}) : {};
+	const reqData = req.data
+		? (req.data.json as {
+				dateRange?: { start: string; end: string };
+				override?: boolean;
+			})
+		: {};
 
 	// Extract date range and options from request
 	const dateRange = reqData?.dateRange
@@ -108,8 +110,7 @@ export default async function PodcastEditorAgentHandler(
 	);
 
 	// Get stories for the date range
-	const endDateFormatted = formatDate(endDate);
-	const publishedStories = await stories.getPublished(ctx.kv, endDateFormatted);
+	const publishedStories = await getPublishedStories();
 
 	if (publishedStories.length === 0) {
 		ctx.logger.info("PodcastEditor: No stories found for date");
@@ -120,7 +121,7 @@ export default async function PodcastEditorAgentHandler(
 	}
 
 	// Check if transcript already exists for this date
-	const existingTranscript = await podcast.getByDate(ctx.kv, endDate);
+	const existingTranscript = await podcast.getByDate(endDate);
 	if (existingTranscript && !options.override) {
 		ctx.logger.info(
 			"PodcastEditor: Podcast transcript already exists for this date",
@@ -140,11 +141,7 @@ export default async function PodcastEditorAgentHandler(
 	);
 
 	// Save transcript
-	const savedTranscript = await podcast.save(
-		ctx.kv,
-		transcript,
-		publishedStories,
-	);
+	const savedTranscript = await podcast.save(transcript, publishedStories);
 
 	ctx.logger.info("PodcastEditor: Generated podcast transcript successfully");
 

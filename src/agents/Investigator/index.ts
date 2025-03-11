@@ -1,11 +1,7 @@
 import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { z } from "zod";
-import {
-	getTodaysResearch,
-	saveResearch,
-	type Article,
-} from "../../../lib/data/research";
+import { research, type Article } from "../../lib/data/research";
 
 // Initialize Firecrawl
 const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
@@ -127,7 +123,7 @@ export default async function InvestigatorAgentHandler(
 
 	if (!dynamicSources?.length) {
 		// Check research first if no dynamic sources
-		const todaysResearch = await getTodaysResearch(ctx.kv);
+		const todaysResearch = await research.getToday();
 		if (todaysResearch) {
 			ctx.logger.info("Using today's research");
 			return await resp.json({
@@ -141,7 +137,7 @@ export default async function InvestigatorAgentHandler(
 
 	if (articles.length > 0) {
 		// Save research if we found any articles
-		await saveResearch(ctx.kv, articles, "investigator");
+		await research.save(articles, "investigator");
 		ctx.logger.info(`Saved ${articles.length} articles to research`);
 	} else {
 		ctx.logger.info("No articles found to save");

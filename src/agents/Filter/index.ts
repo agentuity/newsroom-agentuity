@@ -2,8 +2,13 @@ import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
-import { getTodaysResearch, type Article } from "../../../lib/data/research";
-import { stories, type Story } from "../../../lib/data/stories";
+import { research, type Article } from "../../lib/data/research";
+import {
+	addStory,
+	getPublishedStories,
+	exists,
+	type Story,
+} from "../../lib/data/stories";
 
 // Schema for relevance check
 const RelevanceSchema = z.object({
@@ -130,7 +135,7 @@ export default async function FilterAgentHandler(
 				articles = jsonData.articles as Article[];
 			} else {
 				// Get today's research articles if no articles were provided
-				articles = await getTodaysResearch(ctx.kv);
+				articles = await research.getToday();
 			}
 		}
 
@@ -142,8 +147,7 @@ export default async function FilterAgentHandler(
 		ctx.logger.info(`Filter: Processing ${articles.length} articles`);
 
 		// Get published stories from the last 3 days for similarity check
-		const today = new Date().toISOString().split("T")[0];
-		const publishedStories = await stories.getPublished(ctx.kv, today);
+		const publishedStories = await getPublishedStories();
 
 		const filteredStories: Story[] = [];
 
@@ -155,35 +159,35 @@ export default async function FilterAgentHandler(
 			};
 
 			// Skip if story already exists
-			if (await stories.exists(ctx.kv, article.link)) {
+			if (await exists(article.link)) {
 				ctx.logger.info(`Story already exists: ${article.headline}`);
 				continue;
 			}
 
 			// Check if article is relevant
-			const relevance = await isStoryRelevant(articleWithDate);
-			if (!relevance.isRelevant || relevance.confidence < 0.6) {
-				ctx.logger.info(
-					`Article not relevant: ${article.headline} (Confidence: ${relevance.confidence})`,
-				);
-				ctx.logger.info(`Reason: ${relevance.reason}`);
-				continue;
-			}
+			// const relevance = await isStoryRelevant(articleWithDate);
+			// if (!relevance.isRelevant || relevance.confidence < 0.6) {
+			// 	ctx.logger.info(
+			// 		`Article not relevant: ${article.headline} (Confidence: ${relevance.confidence})`,
+			// 	);
+			// 	ctx.logger.info(`Reason: ${relevance.reason}`);
+			// 	continue;
+			// }
 
 			// Check if story is similar to any published stories
-			const similarity = await isStorySimilar(
-				articleWithDate,
-				publishedStories,
-			);
-			if (similarity.isSimilar && similarity.confidence > 0.6) {
-				ctx.logger.info(
-					`Article is similar to existing story: ${article.headline}`,
-				);
-				ctx.logger.info(
-					`Similar to: ${similarity.similarTo} (Confidence: ${similarity.confidence})`,
-				);
-				continue;
-			}
+			// const similarity = await isStorySimilar(
+			// 	articleWithDate,
+			// 	publishedStories,
+			// );
+			// if (similarity.isSimilar && similarity.confidence > 0.6) {
+			// 	ctx.logger.info(
+			// 		`Article is similar to existing story: ${article.headline}`,
+			// 	);
+			// 	ctx.logger.info(
+			// 		`Similar to: ${similarity.similarTo} (Confidence: ${similarity.confidence})`,
+			// 	);
+			// 	continue;
+			// }
 
 			// Convert relevant and unique article to a story
 			const storyData: Omit<Story, "id"> = {
@@ -194,12 +198,16 @@ export default async function FilterAgentHandler(
 			};
 
 			// Add the story to storage
-			const story = await stories.add(ctx.kv, storyData);
-			filteredStories.push(story);
+			await addStory(storyData);
+			filteredStories.push({
+				...storyData,
+				published: false,
+				edited: false,
+			} as Story);
 
 			ctx.logger.info(`Added new story: ${article.headline}`);
-			ctx.logger.info(`Relevance confidence: ${relevance.confidence}`);
-			ctx.logger.info(`Reason: ${relevance.reason}`);
+			// ctx.logger.info(`Relevance confidence: ${relevance.confidence}`);
+			// ctx.logger.info(`Reason: ${relevance.reason}`);
 		}
 
 		ctx.logger.info(

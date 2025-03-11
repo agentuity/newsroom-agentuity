@@ -1,4 +1,4 @@
-import type { PodcastTranscript } from "./data/podcast";
+import type { PodcastTranscript } from "./data/old/podcast";
 
 /**
  * Posts a podcast update to Slack with the audio link and story list

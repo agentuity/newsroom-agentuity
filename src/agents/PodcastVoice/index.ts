@@ -1,5 +1,5 @@
 import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
-import { podcast, type PodcastTranscript } from "../../../lib/data/podcast";
+import { podcast, type PodcastTranscript } from "../../lib/data/podcast";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { S3Client } from "bun";
@@ -124,7 +124,7 @@ export default async function PodcastVoiceAgentHandler(
 		if ("transcript" in requestData) {
 			transcript = requestData.transcript as PodcastTranscript;
 		} else {
-			transcript = await podcast.getLatest(ctx.kv);
+			transcript = await podcast.getLatest();
 		}
 	}
 
@@ -167,7 +167,7 @@ export default async function PodcastVoiceAgentHandler(
 		audioUrl = await uploadToR2(filename, audioBuffer, ctx.logger);
 
 		// Update the podcast record with the audio URL
-		await podcast.updateAudioUrl(ctx.kv, transcriptDate, audioUrl);
+		await podcast.updateAudioUrl(transcriptDate, audioUrl);
 		ctx.logger.info("PodcastVoice: Updated podcast record with audio URL");
 	} catch (error) {
 		ctx.logger.error("PodcastVoice: Failed to upload to R2", error);

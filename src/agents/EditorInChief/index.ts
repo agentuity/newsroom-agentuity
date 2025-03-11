@@ -1,7 +1,7 @@
 import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
-import { stories, type Story } from "../../../lib/data/stories";
-import { postPodcastToSlack } from "../../../lib/notifications";
-import type { PodcastTranscript } from "../../../lib/data/podcast";
+import type { Story } from "../../lib/data/stories";
+import { postPodcastToSlack } from "../../lib/notifications";
+import type { PodcastTranscript } from "../../lib/data/podcast";
 
 // TODO
 // Right now this runs the entire flow end to end - but in reality the research stories
@@ -23,7 +23,7 @@ export default async function EditorInChiefAgentHandler(
 		data: {},
 		contentType: "application/json",
 	});
-	ctx.logger.info("Researched stories:", researchedStoriesRun.data);
+	ctx.logger.info("Researched stories:", researchedStoriesRun.data.json);
 
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
@@ -32,7 +32,7 @@ export default async function EditorInChiefAgentHandler(
 		data: researchedStoriesRun.data,
 		contentType: "application/json",
 	});
-	ctx.logger.info("Filter: Filtered stories", filteredStories.data);
+	ctx.logger.info("Filter: Filtered stories", filteredStories.data.json);
 
 	const filteredStoriesData = (filteredStories.data?.json || []) as Story[];
 	if (filteredStoriesData.length === 0) {
@@ -50,7 +50,7 @@ export default async function EditorInChiefAgentHandler(
 		data: filteredStories.data,
 		contentType: "application/json",
 	});
-	ctx.logger.info("Editor: Edited stories", editedStories.data);
+	ctx.logger.info("Editor: Edited stories", editedStories.data.json);
 
 	// Get story links from the response
 	const storyLinks =
@@ -77,7 +77,10 @@ export default async function EditorInChiefAgentHandler(
 		},
 		contentType: "application/json",
 	});
-	ctx.logger.info("PodcastEditor: Podcast transcript", podcastTranscript.data);
+	ctx.logger.info(
+		"PodcastEditor: Podcast transcript",
+		podcastTranscript.data.json,
+	);
 
 	if (podcastTranscript) {
 		ctx.logger.info("PodcastVoice: Creating podcast voiceover");
@@ -88,14 +91,18 @@ export default async function EditorInChiefAgentHandler(
 			data: podcastTranscript.data,
 			contentType: "application/json",
 		});
-		ctx.logger.info("PodcastVoice: Podcast voice", podcastVoice.data);
+		ctx.logger.info("PodcastVoice: Podcast voice", podcastVoice.data.json);
 
 		// Publish podcast to a slack channel
 		if (process.env.SLACK_WEBHOOK_URL) {
 			console.log("Publishing podcast to Slack");
 			const transcript = podcastTranscript.data as unknown as PodcastTranscript;
-			const audioUrl =
-				typeof podcastVoice.data === "string" ? podcastVoice.data : undefined;
+			const responseData = podcastVoice.data?.json as {
+				success?: boolean;
+				filename?: string;
+				audioUrl?: string;
+			};
+			const audioUrl = responseData?.audioUrl;
 
 			await postPodcastToSlack(
 				process.env.SLACK_WEBHOOK_URL,
