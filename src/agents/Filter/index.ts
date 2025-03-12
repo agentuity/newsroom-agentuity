@@ -165,29 +165,29 @@ export default async function FilterAgentHandler(
 			}
 
 			// Check if article is relevant
-			// const relevance = await isStoryRelevant(articleWithDate);
-			// if (!relevance.isRelevant || relevance.confidence < 0.6) {
-			// 	ctx.logger.info(
-			// 		`Article not relevant: ${article.headline} (Confidence: ${relevance.confidence})`,
-			// 	);
-			// 	ctx.logger.info(`Reason: ${relevance.reason}`);
-			// 	continue;
-			// }
+			const relevance = await isStoryRelevant(articleWithDate);
+			if (!relevance.isRelevant || relevance.confidence < 0.6) {
+				ctx.logger.info(
+					`Article not relevant: ${article.headline} (Confidence: ${relevance.confidence})`,
+				);
+				ctx.logger.info(`Reason: ${relevance.reason}`);
+				continue;
+			}
 
 			// Check if story is similar to any published stories
-			// const similarity = await isStorySimilar(
-			// 	articleWithDate,
-			// 	publishedStories,
-			// );
-			// if (similarity.isSimilar && similarity.confidence > 0.6) {
-			// 	ctx.logger.info(
-			// 		`Article is similar to existing story: ${article.headline}`,
-			// 	);
-			// 	ctx.logger.info(
-			// 		`Similar to: ${similarity.similarTo} (Confidence: ${similarity.confidence})`,
-			// 	);
-			// 	continue;
-			// }
+			const similarity = await isStorySimilar(
+				articleWithDate,
+				publishedStories,
+			);
+			if (similarity.isSimilar && similarity.confidence > 0.6) {
+				ctx.logger.info(
+					`Article is similar to existing story: ${article.headline}`,
+				);
+				ctx.logger.info(
+					`Similar to: ${similarity.similarTo} (Confidence: ${similarity.confidence})`,
+				);
+				continue;
+			}
 
 			// Convert relevant and unique article to a story
 			const storyData: Omit<Story, "id"> = {
@@ -206,8 +206,8 @@ export default async function FilterAgentHandler(
 			} as Story);
 
 			ctx.logger.info(`Added new story: ${article.headline}`);
-			// ctx.logger.info(`Relevance confidence: ${relevance.confidence}`);
-			// ctx.logger.info(`Reason: ${relevance.reason}`);
+			ctx.logger.info(`Relevance confidence: ${relevance.confidence}`);
+			ctx.logger.info(`Reason: ${relevance.reason}`);
 		}
 
 		ctx.logger.info(
