@@ -63,6 +63,7 @@ const TEMPLATES = {
 const MAX_TOKENS_PER_REQUEST = 25000; // Leave some room for the response
 const AVERAGE_CHARS_PER_TOKEN = 4; // Rough estimate for English text
 const MAX_CHARS = MAX_TOKENS_PER_REQUEST * AVERAGE_CHARS_PER_TOKEN;
+const MAX_STORIES_TO_PROCESS = 10; // Maximum number of stories to process
 
 /**
  * Truncate content to fit within token limits
@@ -229,6 +230,14 @@ export default async function EditorAgentHandler(
 	if (!uneditedStories || uneditedStories.length === 0) {
 		ctx.logger.info("No unedited stories to process");
 		return await resp.json({ links: [] });
+	}
+
+	// Limit to MAX_STORIES_TO_PROCESS
+	if (uneditedStories.length > MAX_STORIES_TO_PROCESS) {
+		ctx.logger.info(
+			`Limiting processing to ${MAX_STORIES_TO_PROCESS} stories out of ${uneditedStories.length} available`,
+		);
+		uneditedStories = uneditedStories.slice(0, MAX_STORIES_TO_PROCESS);
 	}
 
 	ctx.logger.info(
