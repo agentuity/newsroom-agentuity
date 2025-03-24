@@ -96,7 +96,7 @@ export default async function EditorInChiefAgentHandler(
 		// Publish podcast to a slack channel
 		if (process.env.SLACK_WEBHOOK_URL) {
 			console.log("Publishing podcast to Slack");
-			const transcript = podcastTranscript.data as unknown as PodcastTranscript;
+			const transcript = podcastTranscript.data?.json as PodcastTranscript;
 			const responseData = podcastVoice.data?.json as {
 				success?: boolean;
 				filename?: string;
