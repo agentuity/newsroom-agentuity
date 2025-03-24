@@ -42,7 +42,7 @@ bun install
 
 ```bash
 # Run the agent locally
-AGENTUITY_ENV=development agentuity dev
+agentuity dev
 ```
 
 ## Deployment
