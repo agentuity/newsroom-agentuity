@@ -31,18 +31,25 @@ For comprehensive documentation on Agentuity, visit our documentation site at [a
 
 ## Installation
 
-To install dependencies:
+This agent is built using the Agentuity SDK.
 
 ```bash
+# Install dependencies
 bun install
 ```
 
 ## Usage
 
-To run the project:
+```bash
+# Run the agent locally
+AGENTUITY_ENV=development agentuity dev
+```
+
+## Deployment
 
 ```bash
-bun run index.ts
+# Deploy with Agentuity
+agentuity deploy
 ```
 
 ## Contributing
