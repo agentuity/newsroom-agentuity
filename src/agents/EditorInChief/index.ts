@@ -29,7 +29,7 @@ export default async function EditorInChiefAgentHandler(
 		name: "Filter",
 	});
 	const filteredStories = await filterAgent.run({
-		data: researchedStoriesRun.data,
+		data: researchedStoriesRun.data.json,
 		contentType: "application/json",
 	});
 	ctx.logger.info("Filter: Filtered stories", filteredStories.data.json);
