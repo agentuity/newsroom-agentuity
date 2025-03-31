@@ -20,7 +20,7 @@ const r2Client = new S3Client({
  * Format a podcast transcript into a single string for TTS
  */
 function formatTranscriptForVoice(transcript: PodcastTranscript): string {
-	let scriptText = `${transcript.intro}\n\n`;
+	let scriptText = `${transcript.intro}\n\n<break time="2s"/>\n\n`;
 
 	// Add each segment
 	transcript.segments.forEach((segment, index) => {
@@ -31,6 +31,8 @@ function formatTranscriptForVoice(transcript: PodcastTranscript): string {
 		if (segment.transition && index < transcript.segments.length - 1) {
 			scriptText += `${segment.transition}\n\n`;
 		}
+		
+		scriptText += `<break time="2s"/>\n\n`;
 	});
 
 	// Add outro
@@ -59,6 +61,9 @@ async function generateAudio(
 			body: JSON.stringify({
 				text: text,
 				model_id: "eleven_multilingual_v2",
+				model_options: {
+					enable_ssml: true
+				}
 			}),
 		},
 	);
