@@ -11,20 +11,20 @@
 	},
 	"keywords": ["agentuity", "agent", "ai", "ai agent", "vercel", "bun"],
 	"devDependencies": {
-		"@ai-sdk/openai": "^1.2.1",
+		"@ai-sdk/openai": "^1.3.10",
 		"@types/bun": "latest",
 		"@types/node": "^22.13.10",
-		"ai": "^4.1.54",
+		"ai": "^4.3.4",
 		"typescript": "^5.8.2"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
 	},
 	"dependencies": {
-		"@agentuity/sdk": "^0.0.90",
-		"@mendable/firecrawl-js": "^1.19.0",
-		"@upstash/redis": "^1.34.5",
-		"bun-types": "^1.2.4",
+		"@agentuity/sdk": "^0.0.94",
+		"@mendable/firecrawl-js": "^1.22.1",
+		"@upstash/redis": "^1.34.7",
+		"bun-types": "^1.2.9",
 		"dotenv": "^16.4.7",
 		"zod": "^3.24.2"
 	},
