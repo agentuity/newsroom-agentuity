@@ -21,7 +21,7 @@
 		"typescript": "^5.0.0"
 	},
 	"dependencies": {
-		"@agentuity/sdk": "^0.0.94",
+		"@agentuity/sdk": "^0.0.102",
 		"@mendable/firecrawl-js": "^1.22.1",
 		"@upstash/redis": "^1.34.7",
 		"bun-types": "^1.2.9",
