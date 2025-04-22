@@ -24,6 +24,14 @@ export default async function EditorInChiefAgentHandler(
 		contentType: "application/json",
 	});
 	ctx.logger.info("Researched stories:", researchedStoriesRun.data.json);
+	const researchedStories = researchedStoriesRun?.data?.json as {
+		articles: Story[];
+	};
+
+	if (researchedStories?.articles?.length === 0) {
+		ctx.logger.info("No articles found to process");
+		return await resp.text("No articles found to process");
+	}
 
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
@@ -51,6 +59,14 @@ export default async function EditorInChiefAgentHandler(
 		contentType: "application/json",
 	});
 	ctx.logger.info("Editor: Edited stories", editedStories.data.json);
+
+	const editedStoriesData = (editedStories.data?.json || []) as {
+		links: string[];
+	};
+	if (editedStoriesData.links?.length === 0) {
+		ctx.logger.info("No stories to process, skipping podcast step");
+		return await resp.text("No stories to process, skipping podcast step");
+	}
 
 	// Get story links from the response
 	const storyLinks =
