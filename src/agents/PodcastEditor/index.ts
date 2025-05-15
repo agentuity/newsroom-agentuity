@@ -161,7 +161,7 @@ export default async function PodcastEditorAgentHandler(
 
 	ctx.logger.info("PodcastEditor: Generated podcast transcript successfully");
 
-	return await resp.json({
+	return resp.json({
 		transcript: savedTranscript,
 	});
 }

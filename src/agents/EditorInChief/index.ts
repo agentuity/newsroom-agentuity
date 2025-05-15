@@ -125,5 +125,5 @@ export default async function EditorInChiefAgentHandler(
 		}
 	}
 
-	return await resp.text("Editor in chief is done");
+	return resp.text("Editor in chief is done");
 }

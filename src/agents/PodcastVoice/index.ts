@@ -183,7 +183,7 @@ export default async function PodcastVoiceAgentHandler(
 	}
 
 	// Return success response
-	return await resp.json({
+	return resp.json({
 		success: true,
 		filename,
 		audioUrl,

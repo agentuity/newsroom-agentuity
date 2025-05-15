@@ -152,12 +152,6 @@ export default async function FilterAgentHandler(
 				date_added: new Date().toISOString(),
 			};
 
-			// Skip if story already exists
-			if (await exists(article.link)) {
-				ctx.logger.info(`Story already exists: ${article.headline}`);
-				continue;
-			}
-
 			// Check if article is relevant
 			const relevance = await isStoryRelevant(articleWithDate);
 			if (!relevance.isRelevant || relevance.confidence < 0.6) {
@@ -209,7 +203,7 @@ export default async function FilterAgentHandler(
 		);
 
 		// Return as response if called directly as an agent
-		return await resp.json({ stories: filteredStories });
+		return resp.json({ stories: filteredStories });
 	} catch (error) {
 		ctx.logger.error("Error in FilterAgent:", error);
 		throw error;
