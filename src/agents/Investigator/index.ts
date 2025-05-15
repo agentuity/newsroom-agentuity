@@ -1,6 +1,7 @@
 import type { AgentRequest, AgentResponse, AgentContext } from "@agentuity/sdk";
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { research, type Article } from "../../lib/data/research";
 
 // Initialize Firecrawl
@@ -72,9 +73,11 @@ If a story link is not absolute, prepend ${source} to make it absolute.
 Return only pure JSON in the specified format (no extra text, no markdown, no \`\`\`).`;
 
 		try {
+			// Convert Zod schema to JSON Schema explicitly to satisfy Firecrawl API validation
+			const jsonSchema = zodToJsonSchema(ScrapeSchema);
 			const result = await firecrawl.extract([source], {
 				prompt,
-				schema: ScrapeSchema,
+				schema: jsonSchema,
 			});
 
 			if (!result.success) {
@@ -82,7 +85,7 @@ Return only pure JSON in the specified format (no extra text, no markdown, no \`
 				continue;
 			}
 
-			const todayStories = result.data.stories.map((story) => ({
+			const todayStories = result.data.stories.map((story: Article) => ({
 				...story,
 				source,
 				date_found: new Date().toISOString(),
@@ -115,7 +118,7 @@ export default async function InvestigatorAgentHandler(
 	ctx: AgentContext,
 ) {
 	ctx.logger.info("Investigator: Start looking for stories");
-	const json = req.data ? (req.data.json as { dynamicSources?: string[] }) : {};
+	const json = req.data ? (await req.data.json()) as { dynamicSources?: string[] } : {};
 	const dynamicSources = json?.dynamicSources;
 	const sources = [...DEFAULT_SOURCES, ...(dynamicSources ?? [])];
 

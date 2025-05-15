@@ -23,8 +23,9 @@ export default async function EditorInChiefAgentHandler(
 		data: {},
 		contentType: "application/json",
 	});
-	ctx.logger.info("Researched stories:", researchedStoriesRun.data.json);
-	const researchedStories = researchedStoriesRun?.data?.json as {
+	const researchedStoriesJson = researchedStoriesRun.data ? await researchedStoriesRun.data.json() : {};
+	ctx.logger.info("Researched stories:", researchedStoriesJson);
+	const researchedStories = researchedStoriesJson as {
 		articles: Story[];
 	};
 
@@ -36,13 +37,14 @@ export default async function EditorInChiefAgentHandler(
 	const filterAgent = await ctx.getAgent({
 		name: "Filter",
 	});
-	const filteredStories = await filterAgent.run({
-		data: researchedStoriesRun.data.json,
+	const filteredStoriesRun = await filterAgent.run({
+		data: researchedStoriesJson,
 		contentType: "application/json",
 	});
-	ctx.logger.info("Filter: Filtered stories", filteredStories.data.json);
+	const filteredStoriesJson = filteredStoriesRun.data ? await filteredStoriesRun.data.json() : [];
+	ctx.logger.info("Filter: Filtered stories", filteredStoriesJson);
 
-	const filteredStoriesData = (filteredStories.data?.json || []) as Story[];
+	const filteredStoriesData = filteredStoriesJson as Story[];
 	if (filteredStoriesData.length === 0) {
 		ctx.logger.info("No filtered stories to process, skipping editor step");
 		return await resp.text(
@@ -54,13 +56,14 @@ export default async function EditorInChiefAgentHandler(
 	const editorAgent = await ctx.getAgent({
 		name: "Editor",
 	});
-	const editedStories = await editorAgent.run({
-		data: filteredStories.data,
+	const editedStoriesRun = await editorAgent.run({
+		data: filteredStoriesJson,
 		contentType: "application/json",
 	});
-	ctx.logger.info("Editor: Edited stories", editedStories.data.json);
+	const editedStoriesJson = editedStoriesRun.data ? await editedStoriesRun.data.json() : { links: [] };
+	ctx.logger.info("Editor: Edited stories", editedStoriesJson);
 
-	const editedStoriesData = (editedStories.data?.json || []) as {
+	const editedStoriesData = editedStoriesJson as {
 		links: string[];
 	};
 	if (editedStoriesData.links?.length === 0) {
@@ -69,12 +72,7 @@ export default async function EditorInChiefAgentHandler(
 	}
 
 	// Get story links from the response
-	const storyLinks =
-		(
-			editedStories.data?.json as {
-				links: string[];
-			}
-		)?.links || [];
+	const storyLinks = editedStoriesData.links || [];
 
 	ctx.logger.info(
 		`EditorInChief: Editor has processed ${storyLinks.length} stories`,
@@ -84,7 +82,7 @@ export default async function EditorInChiefAgentHandler(
 	const podcastEditorAgent = await ctx.getAgent({
 		name: "PodcastEditor",
 	});
-	const podcastTranscript = await podcastEditorAgent.run({
+	const podcastTranscriptRun = await podcastEditorAgent.run({
 		data: {
 			dateRange: {
 				start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
@@ -93,27 +91,26 @@ export default async function EditorInChiefAgentHandler(
 		},
 		contentType: "application/json",
 	});
-	ctx.logger.info(
-		"PodcastEditor: Podcast transcript",
-		podcastTranscript.data.json,
-	);
+	const podcastTranscriptJson = podcastTranscriptRun.data ? await podcastTranscriptRun.data.json() : null;
+	ctx.logger.info("PodcastEditor: Podcast transcript", podcastTranscriptJson);
 
-	if (podcastTranscript) {
+	if (podcastTranscriptJson) {
 		ctx.logger.info("PodcastVoice: Creating podcast voiceover");
 		const podcastVoiceAgent = await ctx.getAgent({
 			name: "PodcastVoice",
 		});
 		const podcastVoice = await podcastVoiceAgent.run({
-			data: podcastTranscript.data,
+			data: podcastTranscriptJson,
 			contentType: "application/json",
 		});
-		ctx.logger.info("PodcastVoice: Podcast voice", podcastVoice.data.json);
+		const podcastVoiceJson = podcastVoice.data ? await podcastVoice.data.json() : {};
+		ctx.logger.info("PodcastVoice: Podcast voice", podcastVoiceJson);
 
 		// Publish podcast to a slack channel
 		if (process.env.SLACK_WEBHOOK_URL) {
 			console.log("Publishing podcast to Slack");
-			const transcript = podcastTranscript.data?.json as PodcastTranscript;
-			const responseData = podcastVoice.data?.json as {
+			const transcript = podcastTranscriptJson as PodcastTranscript;
+			const responseData = podcastVoiceJson as {
 				success?: boolean;
 				filename?: string;
 				audioUrl?: string;

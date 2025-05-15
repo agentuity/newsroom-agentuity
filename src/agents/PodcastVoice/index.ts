@@ -31,7 +31,7 @@ function formatTranscriptForVoice(transcript: PodcastTranscript): string {
 		if (segment.transition && index < transcript.segments.length - 1) {
 			scriptText += `${segment.transition}\n\n`;
 		}
-		
+
 		scriptText += `<break time="2s"/>\n\n`;
 	});
 
@@ -124,7 +124,7 @@ export default async function PodcastVoiceAgentHandler(
 	let transcript: PodcastTranscript | null = null;
 
 	// Check if request contains a transcript ID or date
-	const requestData = req.data ? req.data.json : null;
+	const requestData = req.data ? await req.data.json() : null;
 	if (requestData && typeof requestData === "object") {
 		if ("transcript" in requestData) {
 			transcript = requestData.transcript as PodcastTranscript;

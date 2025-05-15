@@ -126,17 +126,11 @@ export default async function FilterAgentHandler(
 	try {
 		ctx.logger.info("Filter: Starting to filter stories");
 		// Use input articles if provided, otherwise check request body
-		const json = req.data ? (req.data.json as { articles?: Article[] }) : {};
-		const inputArticles = json?.articles;
-		let articles = inputArticles;
+		const json = req.data ? (await req.data.json()) as { articles?: Article[] } : {};
+		let articles = json?.articles;
 		if (!articles) {
-			const jsonData = req.data ? req.data.json : null;
-			if (jsonData && typeof jsonData === "object" && "articles" in jsonData) {
-				articles = jsonData.articles as Article[];
-			} else {
-				// Get today's research articles if no articles were provided
-				articles = await research.getToday();
-			}
+			// Get today's research articles if no articles were provided
+			articles = await research.getToday();
 		}
 
 		if (!articles || articles.length === 0) {

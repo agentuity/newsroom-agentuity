@@ -43,14 +43,14 @@ CRITICAL: The TOTAL CHARACTER COUNT of the entire transcript MUST BE UNDER 8,000
 
 Here are the stories to cover:
 ${storiesToProcess
-	.map(
-		(story) => `
+				.map(
+					(story) => `
 Title: ${story.headline}
 Summary: ${story.summary}
 ${story.body ? `Details: ${story.body}` : ""}
 `,
-	)
-	.join("\n")}
+				)
+				.join("\n")}
 
 Create a podcast script that:
 1. Opens with a brief introduction that quickly summarizes the day's top stories (a sentence or two, no more). Do not do an intro of the podcast and AI - just get right to the point.
@@ -98,18 +98,18 @@ export default async function PodcastEditorAgentHandler(
 
 	// Parse the request data
 	const reqData = req.data
-		? (req.data.json as {
-				dateRange?: { start: string; end: string };
-				override?: boolean;
-			})
+		? ((await req.data.json()) as {
+			dateRange?: { start: string; end: string };
+			override?: boolean;
+		})
 		: {};
 
 	// Extract date range and options from request
 	const dateRange = reqData?.dateRange
 		? {
-				start: new Date(reqData.dateRange.start),
-				end: new Date(reqData.dateRange.end),
-			}
+			start: new Date(reqData.dateRange.start),
+			end: new Date(reqData.dateRange.end),
+		}
 		: undefined;
 
 	const options = {
