@@ -135,7 +135,7 @@ export default async function FilterAgentHandler(
 
 		if (!articles || articles.length === 0) {
 			ctx.logger.info("No articles to filter");
-			return await resp.json({ filteredStories: [] });
+			return resp.json({ filteredStories: [] });
 		}
 
 		ctx.logger.info(`Filter: Processing ${articles.length} articles`);

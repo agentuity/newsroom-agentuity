@@ -229,7 +229,7 @@ export default async function EditorAgentHandler(
 
 	if (!uneditedStories || uneditedStories.length === 0) {
 		ctx.logger.info("No unedited stories to process");
-		return await resp.json({ links: [] });
+		return resp.json({ links: [] });
 	}
 
 	// Limit to MAX_STORIES_TO_PROCESS
@@ -294,7 +294,7 @@ export default async function EditorAgentHandler(
 
 	ctx.logger.info(`Processed ${editedLinks.length} stories successfully`);
 
-	return await resp.json({
+	return resp.json({
 		links: editedLinks,
 	});
 }

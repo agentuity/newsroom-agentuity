@@ -129,7 +129,7 @@ export default async function InvestigatorAgentHandler(
 		const todaysResearch = await research.getToday();
 		if (todaysResearch) {
 			ctx.logger.info("Using today's research");
-			return await resp.json({
+			return resp.json({
 				articles: todaysResearch,
 			});
 		}

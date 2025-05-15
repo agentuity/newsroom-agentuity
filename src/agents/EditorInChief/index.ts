@@ -31,7 +31,7 @@ export default async function EditorInChiefAgentHandler(
 
 	if (researchedStories?.articles?.length === 0) {
 		ctx.logger.info("No articles found to process");
-		return await resp.text("No articles found to process");
+		return resp.text("No articles found to process");
 	}
 
 	const filterAgent = await ctx.getAgent({
@@ -47,7 +47,7 @@ export default async function EditorInChiefAgentHandler(
 	const filteredStoriesData = filteredStoriesJson as Story[];
 	if (filteredStoriesData.length === 0) {
 		ctx.logger.info("No filtered stories to process, skipping editor step");
-		return await resp.text(
+		return resp.text(
 			"No filtered stories to process, skipping editor step",
 		);
 	}
@@ -68,7 +68,7 @@ export default async function EditorInChiefAgentHandler(
 	};
 	if (editedStoriesData.links?.length === 0) {
 		ctx.logger.info("No stories to process, skipping podcast step");
-		return await resp.text("No stories to process, skipping podcast step");
+		return resp.text("No stories to process, skipping podcast step");
 	}
 
 	// Get story links from the response

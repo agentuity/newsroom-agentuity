@@ -130,7 +130,7 @@ export default async function PodcastEditorAgentHandler(
 
 	if (publishedStories.length === 0) {
 		ctx.logger.info("PodcastEditor: No stories found for date");
-		return await resp.json({
+		return resp.json({
 			success: false,
 			message: "No stories found for date",
 		});
@@ -142,7 +142,7 @@ export default async function PodcastEditorAgentHandler(
 		ctx.logger.info(
 			"PodcastEditor: Podcast transcript already exists for this date",
 		);
-		return await resp.json({
+		return resp.json({
 			success: true,
 			message:
 				"Podcast transcript already exists for this date. Use override option to regenerate.",
